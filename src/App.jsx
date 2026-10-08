@@ -10,6 +10,7 @@ import ProfileView from './views/Profile/ProfileView';
 // Temporales — se reemplazan por el trabajo del equipo
 import PlaceholderView from './views/Placeholder/PlaceholderView';
 import LoginPlaceholder from './views/Placeholder/LoginPlaceholder';
+import DashboardView from './views/Dashboard/DashboardView';
 
 export default function App() {
   return (
@@ -25,7 +26,7 @@ export default function App() {
         }
       >
         {/* 4.3 Dashboard & Lista Tareas · Moisés Medina */}
-        <Route index element={<PlaceholderView title="Pendientes" task="4.3 Dashboard & Lista Tareas" owner="Moisés Medina" />} />
+        <Route index element={<DashboardView />} />
         <Route path="calendario" element={<CalendarView />} />
         <Route path="amigos" element={<FriendsView />} />
         <Route path="perfil" element={<ProfileView />} />
