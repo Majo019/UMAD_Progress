@@ -3,6 +3,7 @@ import { AuthProvider } from './AuthContext';
 import { AvatarProvider } from './AvatarContext';
 import { CalendarProvider } from './CalendarContext';
 import { FriendsProvider } from './FriendsContext';
+import { TasksProvider } from './TasksContext';
 
 /**
  * Junta todos los providers en un solo lugar.
@@ -13,11 +14,13 @@ export default function AppProviders({ children }) {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AvatarProvider>
-          <CalendarProvider>
-            <FriendsProvider>{children}</FriendsProvider>
-          </CalendarProvider>
-        </AvatarProvider>
+<AvatarProvider>
+  <TasksProvider>
+    <CalendarProvider>
+      <FriendsProvider>{children}</FriendsProvider>
+    </CalendarProvider>
+  </TasksProvider>
+</AvatarProvider>
       </AuthProvider>
     </ThemeProvider>
   );
