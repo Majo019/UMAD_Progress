@@ -79,27 +79,28 @@ export function TasksProvider({ children }) {
     [setTasks],
   );
 
-  const completeTask = useCallback(
-    (id) => {
-      setTasks((prev) =>
-        prev.map((task) => {
-          if (task.id !== id || task.completed) return task;
+const completeTask = useCallback(
+  (id) => {
+    const task = tasks.find((item) => item.id === id);
 
-          applyReward({
-            vida: 5,
-            alimento: 5,
-            xp: 10,
-          });
+    if (!task || task.completed) return;
 
-          return {
-            ...task,
-            completed: true,
-          };
-        }),
-      );
-    },
-    [setTasks, applyReward],
-  );
+    setTasks((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, completed: true }
+          : item,
+      ),
+    );
+
+    applyReward({
+      vida: 5,
+      alimento: 5,
+      xp: 10,
+    });
+  },
+  [tasks, setTasks, applyReward],
+);
 
   const reopenTask = useCallback(
     (id) => {

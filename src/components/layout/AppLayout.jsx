@@ -1,9 +1,18 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { CalendarDays, CircleUser, House, Settings, User, Users } from 'lucide-react';
+import {
+  CalendarDays,
+  CircleUser,
+  House,
+  Settings,
+  Timer,
+  User,
+  Users,
+} from 'lucide-react';
 import './layout.css';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', icon: House, end: true },
+  { to: '/pomodoro', label: 'Pomodoro', icon: Timer },
   { to: '/calendario', label: 'Calendar', icon: CalendarDays },
   { to: '/amigos', label: 'Friends', icon: Users },
   { to: '/perfil', label: 'Profile', icon: CircleUser },
