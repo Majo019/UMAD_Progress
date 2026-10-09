@@ -37,11 +37,11 @@ function TaskItem({ task, onComplete, onEdit, onDelete }) {
       </div>
 
       <IconButton
-  icon={Pencil}
-  label="Editar tarea"
-  className="icon-btn--sm"
-  onClick={() => onEdit(task)}
-/>
+        icon={Pencil}
+        label="Editar tarea"
+        className="icon-btn--sm"
+        onClick={() => onEdit(task)}
+      />
 
       <IconButton
         icon={Trash2}
@@ -54,15 +54,23 @@ function TaskItem({ task, onComplete, onEdit, onDelete }) {
 }
 
 export default function DashboardView() {
-const {
-  pendingTasks,
-  addTask,
-  updateTask,
-  completeTask,
-  removeTask,
-} = useTasks();
+  const {
+    pendingTasks,
+    addTask,
+    updateTask,
+    completeTask,
+    removeTask,
+  } = useTasks();
 
-const [modal, setModal] = useState(null);
+  const [modal, setModal] = useState(null);
+
+  const handleSubmit = (data) => {
+    if (modal?.initial) {
+      updateTask(modal.initial.id, data);
+    } else {
+      addTask(data);
+    }
+  };
 
   return (
     <section className="view dashboard">
@@ -79,13 +87,13 @@ const [modal, setModal] = useState(null);
       {pendingTasks.length ? (
         <ul className="task-list">
           {pendingTasks.map((task) => (
-<TaskItem
-  key={task.id}
-  task={task}
-  onComplete={completeTask}
-  onEdit={(task) => setModal({ initial: task })}
-  onDelete={removeTask}
-/>
+            <TaskItem
+              key={task.id}
+              task={task}
+              onComplete={completeTask}
+              onEdit={(selectedTask) => setModal({ initial: selectedTask })}
+              onDelete={removeTask}
+            />
           ))}
         </ul>
       ) : (
@@ -94,28 +102,22 @@ const [modal, setModal] = useState(null);
         </EmptyState>
       )}
 
-<Button
-  variant="dashed"
-  icon={Plus}
-  onClick={() => setModal({})}
->
-  Nueva tarea
-</Button>
+      <Button
+        variant="dashed"
+        icon={Plus}
+        onClick={() => setModal({})}
+      >
+        Nueva tarea
+      </Button>
 
-{modal && (
-  <TaskFormModal
-    open
-    initial={modal.initial}
-    onClose={() => setModal(null)}
-    onSubmit={(data) => {
-      if (modal.initial) {
-        updateTask(modal.initial.id, data);
-      } else {
-        addTask(data);
-      }
-    }}
-  />
-)}
+      {modal && (
+        <TaskFormModal
+          open
+          initial={modal.initial}
+          onClose={() => setModal(null)}
+          onSubmit={handleSubmit}
+        />
+      )}
     </section>
   );
 }
