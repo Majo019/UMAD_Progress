@@ -1,0 +1,90 @@
+/* ==========================================================
+   RewardOverlay · subida de nivel
+   ========================================================== */
+
+.reward-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--backdrop);
+  z-index: 200;
+  animation: reward-fade 250ms var(--ease-out);
+  pointer-events: none;
+}
+
+@keyframes reward-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.reward-overlay__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  text-align: center;
+  max-width: 320px;
+  animation: reward-pop 400ms var(--ease-out);
+}
+
+@keyframes reward-pop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.reward-overlay__icon {
+  color: var(--color-coral);
+}
+
+.reward-overlay__title {
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.reward-overlay__subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+  margin: 0;
+}
+
+.reward-overlay__particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.reward-overlay__particle {
+  position: absolute;
+  top: 30%;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  animation: reward-fall 1.8s var(--ease-out) forwards;
+}
+
+@keyframes reward-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(60vh) rotate(360deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reward-overlay,
+  .reward-overlay__content,
+  .reward-overlay__particle {
+    animation: none;
+  }
+}
