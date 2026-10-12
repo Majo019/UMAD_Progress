@@ -8,18 +8,24 @@ import CalendarView from './views/Calendar/CalendarView';
 import FriendsView from './views/Friends/FriendsView';
 import ProfileView from './views/Profile/ProfileView';
 
+// 4.2 · Zahid Serna — Vistas Auth
+import LoginView from './views/Auth/LoginView';
+import RegisterView from './views/Auth/RegisterView';
+import ForgotPasswordView from './views/Auth/ForgotPasswordView';
+import ResetPasswordView from './views/Auth/ResetPasswordView';
+
 // Temporales — se reemplazan por el trabajo del equipo
 import PlaceholderView from './views/Placeholder/PlaceholderView';
-import LoginPlaceholder from './views/Placeholder/LoginPlaceholder';
 import DashboardView from './views/Dashboard/DashboardView';
-
-
 
 export default function App() {
   return (
     <Routes>
       {/* 4.2 Vistas Auth · Zahid Serna */}
-      <Route path="/login" element={<LoginPlaceholder />} />
+      <Route path="/login" element={<LoginView />} />
+      <Route path="/register" element={<RegisterView />} />
+      <Route path="/forgot-password" element={<ForgotPasswordView />} />
+      <Route path="/reset-password" element={<ResetPasswordView />} />
 
       <Route
         element={
@@ -30,7 +36,7 @@ export default function App() {
       >
         {/* 4.3 Dashboard & Lista Tareas · Moisés Medina */}
         <Route index element={<DashboardView />} />
-    
+
         {/* 4.6 Módulo Pomodoro Timer · Moisés Medina */}
         <Route path="pomodoro" element={<PomodoroView />} />
         <Route path="calendario" element={<CalendarView />} />
