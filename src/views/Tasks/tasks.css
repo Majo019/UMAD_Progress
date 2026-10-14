@@ -1,0 +1,371 @@
+/* ==========================================================
+   Tareas · clasificación por dificultad + vista semanal
+   Colores: difícil = coral, media = ámbar, tranquila = verde
+   ========================================================== */
+
+/* Puntos de color (dificultad) */
+.task-dots {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+}
+.task-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.task-dots .task-dot {
+  width: 6px;
+  height: 6px;
+}
+.task-dot--coral {
+  background: var(--color-coral-strong);
+}
+.task-dot--amber {
+  background: var(--color-amber);
+}
+.task-dot--green {
+  background: var(--color-green);
+}
+
+/* ---------- Resumen de carga ---------- */
+.diff-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.diff-bar {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--tint-neutral);
+}
+.diff-bar__seg {
+  flex-basis: 0;
+  min-width: 6px;
+  transition: flex-grow var(--duration-base) var(--ease-out);
+}
+.diff-bar__seg--coral {
+  background: var(--color-coral-strong);
+}
+.diff-bar__seg--amber {
+  background: var(--color-amber);
+}
+.diff-bar__seg--green {
+  background: var(--color-green);
+}
+.diff-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+.diff-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.diff-legend strong {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+/* ---------- Grupos por dificultad ---------- */
+.diff-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--group-tint, transparent);
+}
+.diff-group--coral {
+  --group-tint: var(--tint-coral);
+}
+.diff-group--amber {
+  --group-tint: var(--tint-amber);
+}
+.diff-group--green {
+  --group-tint: var(--tint-green);
+}
+.diff-group__head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+.diff-group__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+.diff-group__swatch--coral {
+  background: var(--color-coral-strong);
+}
+.diff-group__swatch--amber {
+  background: var(--color-amber);
+}
+.diff-group__swatch--green {
+  background: var(--color-green);
+}
+.diff-group__title {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.diff-group__hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+}
+.diff-group__count {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+}
+.diff-group__empty,
+.week-day__empty {
+  font-size: var(--fs-sm);
+  color: var(--color-text-subtle);
+  padding: var(--space-1) 0;
+}
+
+/* ---------- Tarjeta de tarea ---------- */
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.task {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-3) var(--space-4) var(--space-5);
+  animation: view-in 300ms var(--ease-out);
+}
+.task.card--accent-coral {
+  border-left-color: var(--color-coral-strong);
+}
+.task:has(.dropdown),
+.task:focus-within {
+  z-index: 5;
+}
+.task__body {
+  flex: 1;
+  min-width: 0;
+}
+.task__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task__meta {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.task__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--space-2);
+}
+.task__menu {
+  position: relative;
+}
+.task__menu .icon-btn {
+  color: var(--color-text);
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  min-width: 150px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-modal);
+  animation: fade-in var(--duration-fast);
+}
+.dropdown button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: var(--fs-sm);
+  text-align: left;
+}
+.dropdown button:hover {
+  background: var(--tint-neutral);
+}
+.dropdown button.is-danger {
+  color: var(--color-red);
+}
+
+/* ---------- Vista semanal ---------- */
+.week-nav {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+}
+.week-nav__title {
+  text-align: center;
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.week-strip__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-3) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color var(--duration-fast), background var(--duration-fast);
+}
+.week-strip__day:hover {
+  border-color: var(--color-border-strong);
+}
+.week-strip__name {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xxs);
+  color: var(--color-text-muted);
+}
+.week-strip__num {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+.week-strip__day.is-today .week-strip__num {
+  color: var(--color-blue);
+}
+.week-strip__day.is-selected {
+  border-color: var(--color-blue-strong);
+  box-shadow: 0 0 0 1px var(--color-blue-strong);
+}
+
+.week-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.week-summary__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.week-days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.week-day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  scroll-margin-top: calc(var(--header-height) + var(--space-4));
+}
+.week-day__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+}
+.week-day__name {
+  font-weight: 700;
+  font-size: var(--fs-md);
+}
+.week-day__date {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+}
+.week-day.is-selected .week-day__name {
+  color: var(--color-blue);
+}
+
+/* ---------- Selector de dificultad (formulario) ---------- */
+.diff-picker {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.diff-picker__options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+.diff-picker__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+.diff-picker__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.diff-picker__option:has(input:focus-visible) {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+.diff-picker__option--coral:has(input:checked) {
+  background: var(--tint-coral);
+  border-color: var(--color-coral-strong);
+}
+.diff-picker__option--amber:has(input:checked) {
+  background: var(--tint-amber);
+  border-color: var(--color-amber);
+}
+.diff-picker__option--green:has(input:checked) {
+  background: var(--tint-green);
+  border-color: var(--color-green);
+}

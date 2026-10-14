@@ -4,9 +4,32 @@ import { addDays, toISODate } from '../utils/date';
 
 /**
  * CalendarContext
- * Actividades del calendario (entregas, exámenes, reuniones, bloques de estudio).
- * Evento: { id, title, date: 'YYYY-MM-DD', time: 'HH:MM', detail, type }
+ * Tareas y actividades (entregas, exámenes, reuniones, bloques de estudio).
+ * Evento: { id, title, date: 'YYYY-MM-DD', time: 'HH:MM', detail, type, difficulty }
+ * difficulty: 'dificil' | 'media' | 'tranquila' — define el color de la tarea.
  */
+
+/** Clasificación por dificultad, de la más pesada a la más tranquila. */
+export const DIFFICULTY = {
+  dificil: { label: 'Difícil', color: 'coral', hint: 'Requiere mucho tiempo o concentración' },
+  media: { label: 'Media', color: 'amber', hint: 'Esfuerzo moderado' },
+  tranquila: { label: 'Tranquila', color: 'green', hint: 'Rápida o ligera' },
+};
+export const DIFFICULTY_ORDER = ['dificil', 'media', 'tranquila'];
+
+// Para eventos guardados antes de que existiera `difficulty`
+const DEFAULT_DIFFICULTY_BY_TYPE = {
+  examen: 'dificil',
+  entrega: 'dificil',
+  estudio: 'media',
+  reunion: 'media',
+  personal: 'tranquila',
+};
+
+export function getDifficulty(event) {
+  if (DIFFICULTY[event.difficulty]) return event.difficulty;
+  return DEFAULT_DIFFICULTY_BY_TYPE[event.type] ?? 'media';
+}
 
 export const EVENT_TYPES = {
   entrega: { label: 'Entrega', color: 'coral' },
@@ -20,15 +43,15 @@ function seedEvents() {
   const t = new Date();
   const d = (offset) => toISODate(addDays(t, offset));
   return [
-    { id: 'e1', title: 'Entrega de Proyecto', date: d(0), time: '14:00', detail: 'UI/UX Avanzado', type: 'entrega' },
-    { id: 'e2', title: 'Reunión de Equipo', date: d(0), time: '16:30', detail: 'Sala Virtual B', type: 'reunion' },
-    { id: 'e3', title: 'Bloque de estudio: Bases de Datos', date: d(1), time: '10:00', detail: 'Biblioteca', type: 'estudio' },
-    { id: 'e4', title: 'Examen parcial de Cálculo', date: d(3), time: '08:00', detail: 'Aula 204', type: 'examen' },
-    { id: 'e5', title: 'Entrega reporte de lectura', date: d(6), time: '23:59', detail: 'Ética Profesional', type: 'entrega' },
-    { id: 'e6', title: 'Asesoría con el profe', date: d(8), time: '12:00', detail: 'Cubículo 3', type: 'reunion' },
-    { id: 'e7', title: 'Partido de fútbol', date: d(10), time: '18:00', detail: 'Cancha UMAD', type: 'personal' },
-    { id: 'e8', title: 'Entrega final de Frontend', date: d(13), time: '09:00', detail: 'Ingeniería de Software', type: 'entrega' },
-    { id: 'e9', title: 'Sesión de estudio en grupo', date: d(-3), time: '17:00', detail: 'Sala Virtual A', type: 'estudio' },
+    { id: 'e1', title: 'Entrega de Proyecto', date: d(0), time: '14:00', detail: 'UI/UX Avanzado', type: 'entrega', difficulty: 'dificil' },
+    { id: 'e2', title: 'Reunión de Equipo', date: d(0), time: '16:30', detail: 'Sala Virtual B', type: 'reunion', difficulty: 'tranquila' },
+    { id: 'e3', title: 'Bloque de estudio: Bases de Datos', date: d(1), time: '10:00', detail: 'Biblioteca', type: 'estudio', difficulty: 'media' },
+    { id: 'e4', title: 'Examen parcial de Cálculo', date: d(3), time: '08:00', detail: 'Aula 204', type: 'examen', difficulty: 'dificil' },
+    { id: 'e5', title: 'Entrega reporte de lectura', date: d(6), time: '23:59', detail: 'Ética Profesional', type: 'entrega', difficulty: 'media' },
+    { id: 'e6', title: 'Asesoría con el profe', date: d(8), time: '12:00', detail: 'Cubículo 3', type: 'reunion', difficulty: 'tranquila' },
+    { id: 'e7', title: 'Partido de fútbol', date: d(10), time: '18:00', detail: 'Cancha UMAD', type: 'personal', difficulty: 'tranquila' },
+    { id: 'e8', title: 'Entrega final de Frontend', date: d(13), time: '09:00', detail: 'Ingeniería de Software', type: 'entrega', difficulty: 'dificil' },
+    { id: 'e9', title: 'Sesión de estudio en grupo', date: d(-3), time: '17:00', detail: 'Sala Virtual A', type: 'estudio', difficulty: 'media' },
   ];
 }
 
