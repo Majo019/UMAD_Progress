@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 
 /**
@@ -33,7 +33,7 @@ const INITIAL_WHEEL = [
   { key: 'familia', label: 'Familia', value: 7 },
   { key: 'deporte', label: 'Deporte', value: 5 },
   { key: 'economia', label: 'Economía', value: 4 },
-  { key: 'espiritualidad', label: 'Espiritualidad', value: 6 },
+  { key: 'retrospeccion', label: 'Retrospección', value: 6 },
   { key: 'ocio', label: 'Ocio', value: 7 },
   { key: 'alimentacion', label: 'Alimentación', value: 6 },
 ];
@@ -45,6 +45,15 @@ const AvatarContext = createContext(null);
 export function AvatarProvider({ children }) {
   const [avatar, setAvatar] = usePersistentState('up:avatar', INITIAL_AVATAR);
   const [wheel, setWheel] = usePersistentState('up:wheel', INITIAL_WHEEL);
+
+  // Migración: quien ya tenía guardada la rueda con "Espiritualidad" la ve renombrada
+  useEffect(() => {
+    if (wheel.some((a) => a.key === 'espiritualidad')) {
+      setWheel((prev) =>
+        prev.map((a) => (a.key === 'espiritualidad' ? { ...a, key: 'retrospeccion', label: 'Retrospección' } : a)),
+      );
+    }
+  }, [wheel, setWheel]);
 
   /** reward: { vida?, alimento?, carino?, xp? } — acepta negativos. */
   const applyReward = useCallback(

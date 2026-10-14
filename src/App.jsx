@@ -4,7 +4,7 @@ import { RequireAuth } from './context';
 import PomodoroView from './views/Pomodoro/PomodoroView';
 
 // 4.7 · Pablo Farid Montoro
-import CalendarView from './views/Calendar/CalendarView';
+import TasksView from './views/Tasks/TasksView';
 import FriendsView from './views/Friends/FriendsView';
 import ProfileView from './views/Profile/ProfileView';
 
@@ -39,7 +39,7 @@ export default function App() {
 
         {/* 4.6 Módulo Pomodoro Timer · Moisés Medina */}
         <Route path="pomodoro" element={<PomodoroView />} />
-        <Route path="calendario" element={<CalendarView />} />
+        <Route path="tareas" element={<TasksView />} />
         <Route path="amigos" element={<FriendsView />} />
         <Route path="perfil" element={<ProfileView />} />
         <Route
