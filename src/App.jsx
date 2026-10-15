@@ -15,8 +15,9 @@ import ForgotPasswordView from './views/Auth/ForgotPasswordView';
 import ResetPasswordView from './views/Auth/ResetPasswordView';
 
 // Temporales — se reemplazan por el trabajo del equipo
-import PlaceholderView from './views/Placeholder/PlaceholderView';
 import DashboardView from './views/Dashboard/DashboardView';
+
+import TasksHistoryView from './views/TasksHistory/TasksHistoryView';
 
 export default function App() {
   return (
@@ -44,7 +45,7 @@ export default function App() {
         <Route path="perfil" element={<ProfileView />} />
         <Route
           path="tareas-pasadas"
-          element={<PlaceholderView title="Tareas pasadas" task="Historial de tareas" owner="Moisés Medina (TasksContext)" />}
+          element={<TasksHistoryView />}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

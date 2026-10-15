@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Button, Field, Modal } from '../../components/ui';
+import { useAvatar } from '../../context';
 
 const EMPTY_FORM = {
   title: '',
   description: '',
   dueDate: '',
   priority: 'media',
+  area: '',
 };
 
 export default function TaskFormModal({
@@ -14,6 +16,8 @@ export default function TaskFormModal({
   onClose,
   onSubmit,
 }) {
+  const { wheel } = useAvatar();
+
   const [form, setForm] = useState(EMPTY_FORM);
 
   useEffect(() => {
@@ -25,6 +29,7 @@ export default function TaskFormModal({
         description: initial.description ?? '',
         dueDate: initial.dueDate ?? '',
         priority: initial.priority ?? 'media',
+        area: initial.area ?? '',
       });
     } else {
       setForm(EMPTY_FORM);
@@ -45,7 +50,7 @@ export default function TaskFormModal({
 
     const title = form.title.trim();
 
-    if (!title) return;
+    if (!title || !form.area) return;
 
     onSubmit({
       ...form,
@@ -110,6 +115,23 @@ export default function TaskFormModal({
           <option value="alta">Alta</option>
           <option value="media">Media</option>
           <option value="baja">Baja</option>
+        </Field>
+
+        <Field
+          label="Área de la vida"
+          as="select"
+          name="area"
+          value={form.area}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Selecciona un área</option>
+
+          {wheel.map((area) => (
+            <option key={area.key} value={area.key}>
+              {area.label}
+            </option>
+          ))}
         </Field>
       </form>
     </Modal>

@@ -1,29 +1,84 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pause, Play, RotateCcw, TimerReset } from 'lucide-react';
-import { Button, Card, Chip, ProgressBar } from '../../components/ui';
+import {
+  Pause,
+  Play,
+  RotateCcw,
+  TimerReset,
+} from 'lucide-react';
+
+import {
+  Button,
+  Card,
+  Chip,
+  Field,
+  ProgressBar,
+} from '../../components/ui';
+
 import { useAvatar } from '../../context';
+import { usePersistentState } from '../../hooks/usePersistentState';
+
 import './pomodoro.css';
 
-const FOCUS_SECONDS = 25 * 60;
-const BREAK_SECONDS = 5 * 60;
+const DEFAULT_FOCUS_MINUTES = 25;
+const DEFAULT_BREAK_MINUTES = 5;
+
+const clampMinutes = (value, min, max) => {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) return min;
+
+  return Math.min(max, Math.max(min, Math.round(number)));
+};
 
 export default function PomodoroView() {
   const { applyReward } = useAvatar();
 
+  const [focusMinutes, setFocusMinutes] = usePersistentState(
+    'up:pomodoro-focus',
+    DEFAULT_FOCUS_MINUTES,
+  );
+
+  const [breakMinutes, setBreakMinutes] = usePersistentState(
+    'up:pomodoro-break',
+    DEFAULT_BREAK_MINUTES,
+  );
+
+  const focusSeconds = focusMinutes * 60;
+  const breakSeconds = breakMinutes * 60;
+
   const [phase, setPhase] = useState('focus');
-  const [secondsLeft, setSecondsLeft] = useState(FOCUS_SECONDS);
+
+  const [secondsLeft, setSecondsLeft] = useState(
+    focusSeconds,
+  );
+
   const [isRunning, setIsRunning] = useState(false);
-  const [completedSessions, setCompletedSessions] = useState(0);
+
+  const [completedSessions, setCompletedSessions] =
+    usePersistentState(
+      'up:pomodoro-sessions',
+      0,
+    );
 
   const rewardedRef = useRef(false);
 
   const totalSeconds =
-    phase === 'focus' ? FOCUS_SECONDS : BREAK_SECONDS;
+    phase === 'focus'
+      ? focusSeconds
+      : breakSeconds;
 
   const progress = useMemo(() => {
+    if (!totalSeconds) return 0;
+
     const elapsed = totalSeconds - secondsLeft;
 
-    return Math.round((elapsed / totalSeconds) * 100);
+    return Math.min(
+      100,
+      Math.max(
+        0,
+        Math.round((elapsed / totalSeconds) * 100),
+      ),
+    );
   }, [secondsLeft, totalSeconds]);
 
   useEffect(() => {
@@ -45,21 +100,36 @@ export default function PomodoroView() {
             });
 
             rewardedRef.current = true;
-            setCompletedSessions((count) => count + 1);
+
+            setCompletedSessions(
+              (count) => count + 1,
+            );
           }
 
           setPhase('break');
-          return BREAK_SECONDS;
+
+          return breakSeconds;
         }
 
         rewardedRef.current = false;
+
         setPhase('focus');
-        return FOCUS_SECONDS;
+
+        return focusSeconds;
       });
     }, 1000);
 
-    return () => window.clearInterval(interval);
-  }, [isRunning, phase, applyReward]);
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [
+    isRunning,
+    phase,
+    focusSeconds,
+    breakSeconds,
+    applyReward,
+    setCompletedSessions,
+  ]);
 
   const toggleTimer = () => {
     setIsRunning((running) => !running);
@@ -71,49 +141,174 @@ export default function PomodoroView() {
 
     setSecondsLeft(
       phase === 'focus'
-        ? FOCUS_SECONDS
-        : BREAK_SECONDS,
+        ? focusSeconds
+        : breakSeconds,
     );
   };
 
   const changePhase = (nextPhase) => {
     setIsRunning(false);
     rewardedRef.current = false;
+
     setPhase(nextPhase);
 
     setSecondsLeft(
       nextPhase === 'focus'
-        ? FOCUS_SECONDS
-        : BREAK_SECONDS,
+        ? focusSeconds
+        : breakSeconds,
     );
   };
 
-  const minutes = Math.floor(secondsLeft / 60);
-  const seconds = secondsLeft % 60;
+  const handleFocusChange = (event) => {
+    const value = clampMinutes(
+      event.target.value,
+      1,
+      120,
+    );
 
-  const formattedTime = `${String(minutes).padStart(2, '0')}:${String(
-    seconds,
-  ).padStart(2, '0')}`;
+    setFocusMinutes(value);
+
+    if (!isRunning && phase === 'focus') {
+      setSecondsLeft(value * 60);
+    }
+  };
+
+  const handleBreakChange = (event) => {
+    const value = clampMinutes(
+      event.target.value,
+      1,
+      60,
+    );
+
+    setBreakMinutes(value);
+
+    if (!isRunning && phase === 'break') {
+      setSecondsLeft(value * 60);
+    }
+  };
+
+  const applyPreset = (
+    newFocus,
+    newBreak,
+  ) => {
+    if (isRunning) return;
+
+    setFocusMinutes(newFocus);
+    setBreakMinutes(newBreak);
+
+    setSecondsLeft(
+      phase === 'focus'
+        ? newFocus * 60
+        : newBreak * 60,
+    );
+  };
+
+  const minutes =
+    Math.floor(secondsLeft / 60);
+
+  const seconds =
+    secondsLeft % 60;
+
+  const formattedTime =
+    `${String(minutes).padStart(2, '0')}:` +
+    `${String(seconds).padStart(2, '0')}`;
 
   return (
     <section className="view pomodoro">
       <div>
-        <h1 className="page-title">Pomodoro</h1>
+        <h1 className="page-title">
+          Pomodoro
+        </h1>
+
         <p className="pomodoro__subtitle">
           Organiza tus sesiones de enfoque y descanso.
         </p>
       </div>
 
+      <Card className="pomodoro__settings">
+        <div className="pomodoro__settings-header">
+          <div>
+            <p className="label-mono">
+              Configuración
+            </p>
+
+            <p className="text-muted">
+              Personaliza la duración de tus sesiones.
+            </p>
+          </div>
+        </div>
+
+        <div className="pomodoro__settings-grid">
+          <Field
+            label="Enfoque"
+            type="number"
+            min="1"
+            max="120"
+            value={focusMinutes}
+            onChange={handleFocusChange}
+            disabled={isRunning}
+          />
+
+          <Field
+            label="Descanso"
+            type="number"
+            min="1"
+            max="60"
+            value={breakMinutes}
+            onChange={handleBreakChange}
+            disabled={isRunning}
+          />
+        </div>
+
+        <p className="pomodoro__settings-hint">
+          Duración en minutos
+        </p>
+
+        <div className="pomodoro__presets">
+          <Button
+            variant="secondary"
+            onClick={() => applyPreset(25, 5)}
+            disabled={isRunning}
+          >
+            25 / 5
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => applyPreset(50, 10)}
+            disabled={isRunning}
+          >
+            50 / 10
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => applyPreset(15, 5)}
+            disabled={isRunning}
+          >
+            15 / 5
+          </Button>
+        </div>
+      </Card>
+
       <div className="pomodoro__phases">
         <Button
-          variant={phase === 'focus' ? 'primary' : 'secondary'}
+          variant={
+            phase === 'focus'
+              ? 'primary'
+              : 'secondary'
+          }
           onClick={() => changePhase('focus')}
         >
           Enfoque
         </Button>
 
         <Button
-          variant={phase === 'break' ? 'blue' : 'secondary'}
+          variant={
+            phase === 'break'
+              ? 'blue'
+              : 'secondary'
+          }
           onClick={() => changePhase('break')}
         >
           Descanso
@@ -122,13 +317,23 @@ export default function PomodoroView() {
 
       <Card
         className="pomodoro__timer-card"
-        accent={phase === 'focus' ? 'coral' : 'blue'}
+        accent={
+          phase === 'focus'
+            ? 'coral'
+            : 'blue'
+        }
       >
         <div className="pomodoro__timer-icon">
           <TimerReset size={28} />
         </div>
 
-        <Chip color={phase === 'focus' ? 'coral' : 'blue'}>
+        <Chip
+          color={
+            phase === 'focus'
+              ? 'coral'
+              : 'blue'
+          }
+        >
           {phase === 'focus'
             ? 'Sesión de enfoque'
             : 'Descanso'}
@@ -148,15 +353,25 @@ export default function PomodoroView() {
               ? 'Progreso de enfoque'
               : 'Progreso de descanso'
           }
-          color={phase === 'focus' ? 'coral' : 'blue'}
+          color={
+            phase === 'focus'
+              ? 'coral'
+              : 'blue'
+          }
         />
 
         <div className="pomodoro__actions">
           <Button
-            icon={isRunning ? Pause : Play}
+            icon={
+              isRunning
+                ? Pause
+                : Play
+            }
             onClick={toggleTimer}
           >
-            {isRunning ? 'Pausar' : 'Iniciar'}
+            {isRunning
+              ? 'Pausar'
+              : 'Iniciar'}
           </Button>
 
           <Button
@@ -179,7 +394,8 @@ export default function PomodoroView() {
         </strong>
 
         <p className="text-muted">
-          Cada sesión de enfoque completada otorga +10 cariño y +15 XP.
+          Cada sesión de enfoque completada otorga
+          +10 cariño y +15 XP.
         </p>
       </Card>
     </section>

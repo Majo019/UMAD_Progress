@@ -8,7 +8,17 @@ export const TASK_PRIORITIES = {
   baja: { label: 'Baja', color: 'green' },
 };
 
+const TASK_REWARD = {
+  vida: 5,
+  alimento: 5,
+  xp: 10,
+};
+
+const TASK_AREA_POINTS = 1;
+
 function seedTasks() {
+  const now = Date.now();
+
   return [
     {
       id: 't1',
@@ -16,8 +26,10 @@ function seedTasks() {
       description: 'Completar la parte pendiente del frontend',
       dueDate: '',
       priority: 'alta',
+      area: 'trabajo',
       completed: false,
-      createdAt: Date.now(),
+      completedAt: null,
+      createdAt: now,
     },
     {
       id: 't2',
@@ -25,8 +37,10 @@ function seedTasks() {
       description: 'Revisar consultas y ejercicios vistos en clase',
       dueDate: '',
       priority: 'media',
+      area: 'trabajo',
       completed: false,
-      createdAt: Date.now(),
+      completedAt: null,
+      createdAt: now,
     },
     {
       id: 't3',
@@ -34,8 +48,10 @@ function seedTasks() {
       description: 'Ver próximas entregas de la semana',
       dueDate: '',
       priority: 'baja',
+      area: 'retrospeccion',
       completed: true,
-      createdAt: Date.now(),
+      completedAt: now,
+      createdAt: now,
     },
   ];
 }
@@ -44,7 +60,11 @@ const TasksContext = createContext(null);
 
 export function TasksProvider({ children }) {
   const [tasks, setTasks] = usePersistentState('up:tasks', seedTasks);
-  const { applyReward } = useAvatar();
+
+  const {
+    applyReward,
+    boostArea,
+  } = useAvatar();
 
   const addTask = useCallback(
     (task) => {
@@ -54,6 +74,7 @@ export function TasksProvider({ children }) {
           ...task,
           id: `t-${Date.now()}`,
           completed: false,
+          completedAt: null,
           createdAt: Date.now(),
         },
       ]);
@@ -65,7 +86,12 @@ export function TasksProvider({ children }) {
     (id, patch) => {
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === id ? { ...task, ...patch } : task,
+          task.id === id
+            ? {
+                ...task,
+                ...patch,
+              }
+            : task,
         ),
       );
     },
@@ -74,39 +100,56 @@ export function TasksProvider({ children }) {
 
   const removeTask = useCallback(
     (id) => {
-      setTasks((prev) => prev.filter((task) => task.id !== id));
+      setTasks((prev) =>
+        prev.filter((task) => task.id !== id),
+      );
     },
     [setTasks],
   );
 
-const completeTask = useCallback(
-  (id) => {
-    const task = tasks.find((item) => item.id === id);
+  const completeTask = useCallback(
+    (id) => {
+      const task = tasks.find((item) => item.id === id);
 
-    if (!task || task.completed) return;
+      if (!task || task.completed) return;
 
-    setTasks((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, completed: true }
-          : item,
-      ),
-    );
+      setTasks((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                completed: true,
+                completedAt: Date.now(),
+              }
+            : item,
+        ),
+      );
 
-    applyReward({
-      vida: 5,
-      alimento: 5,
-      xp: 10,
-    });
-  },
-  [tasks, setTasks, applyReward],
-);
+      applyReward(TASK_REWARD);
+
+      if (task.area) {
+        boostArea(task.area, TASK_AREA_POINTS);
+      }
+    },
+    [
+      tasks,
+      setTasks,
+      applyReward,
+      boostArea,
+    ],
+  );
 
   const reopenTask = useCallback(
     (id) => {
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === id ? { ...task, completed: false } : task,
+          task.id === id
+            ? {
+                ...task,
+                completed: false,
+                completedAt: null,
+              }
+            : task,
         ),
       );
     },
@@ -114,12 +157,31 @@ const completeTask = useCallback(
   );
 
   const pendingTasks = useMemo(
-    () => tasks.filter((task) => !task.completed),
+    () =>
+      tasks
+        .filter((task) => !task.completed)
+        .sort((a, b) => {
+          if (!a.dueDate && !b.dueDate) {
+            return b.createdAt - a.createdAt;
+          }
+
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+
+          return a.dueDate.localeCompare(b.dueDate);
+        }),
     [tasks],
   );
 
   const completedTasks = useMemo(
-    () => tasks.filter((task) => task.completed),
+    () =>
+      tasks
+        .filter((task) => task.completed)
+        .sort(
+          (a, b) =>
+            (b.completedAt ?? 0) -
+            (a.completedAt ?? 0),
+        ),
     [tasks],
   );
 
@@ -128,11 +190,13 @@ const completeTask = useCallback(
       tasks,
       pendingTasks,
       completedTasks,
+
       addTask,
       updateTask,
       removeTask,
       completeTask,
       reopenTask,
+
       resetTasks: () => setTasks(seedTasks()),
     }),
     [
@@ -159,7 +223,9 @@ export function useTasks() {
   const ctx = useContext(TasksContext);
 
   if (!ctx) {
-    throw new Error('useTasks debe usarse dentro de <TasksProvider>');
+    throw new Error(
+      'useTasks debe usarse dentro de <TasksProvider>',
+    );
   }
 
   return ctx;
