@@ -1,3 +1,4 @@
+> Los datos se guardan en `localStorage` mientras se realiza la integracion completa con el backend. Desde **Perfil -> Configuracion** puedes restablecer los datos de ejemplo.
 
 ## Backend y Conexion a la Base de Datos
 
