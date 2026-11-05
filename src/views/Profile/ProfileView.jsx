@@ -2,23 +2,43 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
+  Award,
   History,
   Info,
   LogOut,
+  Medal,
   Moon,
   PieChart,
   Pencil,
   RotateCcw,
   Settings,
   SlidersHorizontal,
+  Sparkles,
   Sun,
 } from 'lucide-react';
-import { Button, Card, Field, IconButton, Modal } from '../../components/ui';
+import { Button, Card, Chip, Field, IconButton, Modal, ProgressBar } from '../../components/ui';
 import AvatarWidget from '../../components/avatar/AvatarWidget';
-import { useAuth, useAvatar, useCalendar, useTheme } from '../../context';
+import { XP_PER_LEVEL, useAuth, useAvatar, useCalendar, useTasks, useTheme } from '../../context';
 import { clearPersistedState } from '../../hooks/usePersistentState';
 import LifeWheel from './LifeWheel';
 import './profile.css';
+
+const LEVEL_RANKS = [
+  { min: 1, label: 'Novato' },
+  { min: 5, label: 'Aprendiz' },
+  { min: 10, label: 'Constante' },
+  { min: 20, label: 'Avanzado' },
+  { min: 30, label: 'Maestro' },
+];
+
+function formatAchievementDate(timestamp) {
+  if (!timestamp) return '';
+  return new Intl.DateTimeFormat('es-MX', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(timestamp));
+}
 
 function EditProfileModal({ open, onClose }) {
   const { user, updateProfile } = useAuth();
@@ -122,9 +142,12 @@ function SettingsModal({ open, onClose }) {
 
 export default function ProfileView() {
   const { user } = useAuth();
-  const { wheel, setWheelValue } = useAvatar();
+  const { wheel, setWheelValue, level, xp } = useAvatar();
+  const { achievements } = useTasks();
   const navigate = useNavigate();
   const location = useLocation();
+  const rank = [...LEVEL_RANKS].reverse().find((item) => level >= item.min) ?? LEVEL_RANKS[0];
+  const nextRank = LEVEL_RANKS.find((item) => level < item.min);
 
   const [selectedArea, setSelectedArea] = useState(null);
   const [editingWheel, setEditingWheel] = useState(false);
@@ -154,6 +177,57 @@ export default function ProfileView() {
           </p>
         </div>
       )}
+
+      <Card className="profile-level">
+        <div className="profile-level__heading">
+          <div className="profile-level__icon">
+            <Medal size={22} aria-hidden="true" />
+          </div>
+          <div className="profile-level__identity">
+            <p className="label-mono">Clasificación</p>
+            <h2 className="profile-level__rank">{rank.label}</h2>
+          </div>
+          <Chip color="amber">Nivel {level}</Chip>
+        </div>
+        <ProgressBar value={xp} max={XP_PER_LEVEL} label="Progreso al siguiente nivel" color="blue" />
+        <p className="profile-level__hint">
+          {nextRank
+            ? `Completa actividades para llegar al rango ${nextRank.label} en el nivel ${nextRank.min}.`
+            : 'Has alcanzado el rango más alto. Sigue acumulando experiencia.'}
+        </p>
+      </Card>
+
+      <Card className="achievement-card">
+        <div className="achievement-card__heading">
+          <div className="achievement-card__title">
+            <Award size={20} aria-hidden="true" />
+            <h2 className="section-title">Logros de tareas</h2>
+          </div>
+          <Chip color="amber">{achievements.length} {achievements.length === 1 ? 'logro' : 'logros'}</Chip>
+        </div>
+        {achievements.length ? (
+          <ul className="achievement-list">
+            {[...achievements].reverse().map((achievement) => (
+              <li className="achievement-list__item" key={achievement.id}>
+                <span className="achievement-list__icon">
+                  <Sparkles size={16} aria-hidden="true" />
+                </span>
+                <span className="achievement-list__details">
+                  <strong>Tarea completada</strong>
+                  <span>{achievement.taskTitle}</span>
+                </span>
+                <time dateTime={new Date(achievement.completedAt).toISOString()}>
+                  {formatAchievementDate(achievement.completedAt)}
+                </time>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="achievement-card__empty">
+            Completa una tarea para desbloquear tu primer logro.
+          </p>
+        )}
+      </Card>
 
       {/* Rueda de la vida */}
       <Card className="wheel-card">

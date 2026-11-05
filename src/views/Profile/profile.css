@@ -73,6 +73,111 @@
   color: var(--color-text-muted);
 }
 
+.profile-level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.profile-level__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.profile-level__icon,
+.achievement-list__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tint-amber);
+  color: var(--color-amber);
+}
+.profile-level__identity {
+  flex: 1;
+}
+.profile-level__rank {
+  margin-top: 2px;
+  font-size: var(--fs-lg);
+  font-weight: 800;
+}
+.profile-level__hint {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.achievement-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.achievement-card__heading,
+.achievement-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.achievement-card__heading {
+  justify-content: space-between;
+}
+.achievement-card__title {
+  color: var(--color-amber);
+}
+.achievement-card__title h2 {
+  color: var(--color-text);
+}
+.achievement-card__empty {
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+.achievement-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 280px;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.achievement-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--tint-neutral);
+}
+.achievement-list__icon {
+  width: 34px;
+  height: 34px;
+  background: var(--tint-blue);
+  color: var(--color-blue);
+}
+.achievement-list__details {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.achievement-list__details strong {
+  font-size: var(--fs-sm);
+}
+.achievement-list__details span {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.achievement-list__item time {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+}
+
 /* Rueda de la vida */
 .wheel-card {
   --wheel-1: #8fb4ff;
