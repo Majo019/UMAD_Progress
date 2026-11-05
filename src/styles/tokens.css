@@ -1,0 +1,129 @@
+/* ==========================================================
+   UMAD Progress · Design Tokens (4.1 Design System)
+   Todos los componentes deben usar estas variables,
+   nunca colores "a mano". Así el tema claro/oscuro funciona solo.
+   ========================================================== */
+
+:root,
+[data-theme='dark'] {
+  /* Superficies */
+  --color-bg: #0f0f10;
+  --color-bg-elevated: #141416;
+  --color-surface: #1b1b1e;
+  --color-surface-2: #242428;
+  --color-border: #2a2a2f;
+  --color-border-strong: #3a3a41;
+
+  /* Texto */
+  --color-text: #ececef;
+  --color-text-muted: #a3a3ad;
+  --color-text-subtle: #5d5d66;
+  --color-text-on-accent: #3a0d08;
+
+  /* Marca y acentos */
+  --color-coral: #ff8a7a;
+  --color-coral-strong: #ff5a4e;
+  --color-coral-soft: #ffb4a8;
+  --color-blue: #8fb4ff;
+  --color-blue-strong: #3d86ff;
+  --color-cyan: #14e0f0;
+  --color-green: #3ecf6e;
+  --color-amber: #f5a524;
+  --color-red: #ff5a5a;
+
+  /* Fondos suaves para chips / badges */
+  --tint-coral: rgba(255, 138, 122, 0.14);
+  --tint-blue: rgba(143, 180, 255, 0.14);
+  --tint-green: rgba(62, 207, 110, 0.14);
+  --tint-amber: rgba(245, 165, 36, 0.14);
+  --tint-neutral: rgba(255, 255, 255, 0.06);
+
+  /* Gradientes */
+  --gradient-coral: linear-gradient(135deg, #ffb4a8 0%, #ff5a4e 100%);
+  --gradient-blue: linear-gradient(135deg, #3d9bff 0%, #14e0f0 100%);
+
+  /* Sombras */
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-coral: 0 8px 24px rgba(255, 90, 78, 0.35);
+  --shadow-blue: 0 8px 24px rgba(61, 134, 255, 0.35);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.6);
+
+  --backdrop: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --color-bg: #f6f4f2;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f0edea;
+  --color-border: #e6e1dc;
+  --color-border-strong: #d4cdc6;
+
+  --color-text: #1d1b1a;
+  --color-text-muted: #6b6560;
+  --color-text-subtle: #aaa39c;
+  --color-text-on-accent: #3a0d08;
+
+  --color-coral: #f0604f;
+  --color-coral-strong: #e2483a;
+  --color-coral-soft: #d9533f;
+  --color-blue: #3d6fd8;
+  --color-blue-strong: #2f6cf0;
+  --color-green: #1f9e4c;
+  --color-amber: #c67c00;
+
+  --tint-coral: rgba(240, 96, 79, 0.12);
+  --tint-blue: rgba(61, 111, 216, 0.12);
+  --tint-green: rgba(31, 158, 76, 0.12);
+  --tint-amber: rgba(198, 124, 0, 0.12);
+  --tint-neutral: rgba(0, 0, 0, 0.05);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-coral: 0 8px 20px rgba(240, 96, 79, 0.25);
+  --shadow-blue: 0 8px 20px rgba(47, 108, 240, 0.25);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.2);
+
+  --backdrop: rgba(20, 16, 14, 0.4);
+  color-scheme: light;
+}
+
+:root {
+  /* Tipografía */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --fs-xxs: 0.6875rem; /* 11px */
+  --fs-xs: 0.75rem;    /* 12px */
+  --fs-sm: 0.875rem;   /* 14px */
+  --fs-md: 1rem;       /* 16px */
+  --fs-lg: 1.125rem;   /* 18px */
+  --fs-xl: 1.375rem;   /* 22px */
+  --fs-2xl: 1.75rem;   /* 28px */
+
+  /* Espaciado (escala de 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Bordes */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Layout */
+  --app-max-width: 560px;
+  --header-height: 64px;
+  --nav-height: 68px;
+
+  /* Movimiento */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+}
