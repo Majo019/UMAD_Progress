@@ -60,6 +60,7 @@ const TasksContext = createContext(null);
 
 export function TasksProvider({ children }) {
   const [tasks, setTasks] = usePersistentState('up:tasks', seedTasks);
+  const [achievements, setAchievements] = usePersistentState('up:taskAchievements', []);
 
   const {
     applyReward,
@@ -113,17 +114,27 @@ export function TasksProvider({ children }) {
 
       if (!task || task.completed) return;
 
+      const completedAt = Date.now();
       setTasks((prev) =>
         prev.map((item) =>
           item.id === id
             ? {
                 ...item,
                 completed: true,
-                completedAt: Date.now(),
+                completedAt,
               }
             : item,
         ),
       );
+      setAchievements((prev) => [
+        ...prev,
+        {
+          id: `${id}-${completedAt}-${prev.length}`,
+          taskId: id,
+          taskTitle: task.title,
+          completedAt,
+        },
+      ]);
 
       applyReward(TASK_REWARD);
 
@@ -134,6 +145,7 @@ export function TasksProvider({ children }) {
     [
       tasks,
       setTasks,
+      setAchievements,
       applyReward,
       boostArea,
     ],
@@ -190,6 +202,7 @@ export function TasksProvider({ children }) {
       tasks,
       pendingTasks,
       completedTasks,
+      achievements,
 
       addTask,
       updateTask,
@@ -197,18 +210,23 @@ export function TasksProvider({ children }) {
       completeTask,
       reopenTask,
 
-      resetTasks: () => setTasks(seedTasks()),
+      resetTasks: () => {
+        setTasks(seedTasks());
+        setAchievements([]);
+      },
     }),
     [
       tasks,
       pendingTasks,
       completedTasks,
+      achievements,
       addTask,
       updateTask,
       removeTask,
       completeTask,
       reopenTask,
       setTasks,
+      setAchievements,
     ],
   );
 

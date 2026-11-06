@@ -1,4 +1,6 @@
 import {
+  ArrowDownRight,
+  ArrowUpRight,
   CheckCircle2,
   History,
   RotateCcw,
@@ -30,6 +32,79 @@ function formatCompletedDate(timestamp) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(timestamp));
+}
+
+function getWeekStart(date) {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const daysSinceMonday = (start.getDay() + 6) % 7;
+  start.setDate(start.getDate() - daysSinceMonday);
+  return start;
+}
+
+function countTasksInRange(tasks, start, end) {
+  return tasks.filter((task) => {
+    const timestamp = Number(task.completedAt);
+    return Number.isFinite(timestamp) && timestamp >= start.getTime() && timestamp < end.getTime();
+  }).length;
+}
+
+function formatWeekRange(start) {
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const format = (date) => new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short' }).format(date);
+  return `${format(start)} – ${format(end)}`;
+}
+
+function WeeklyComparison({ tasks }) {
+  const currentStart = getWeekStart(new Date());
+  const previousStart = new Date(currentStart);
+  previousStart.setDate(previousStart.getDate() - 7);
+  const nextWeek = new Date(currentStart);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+
+  const currentCount = countTasksInRange(tasks, currentStart, nextWeek);
+  const previousCount = countTasksInRange(tasks, previousStart, currentStart);
+  const maxCount = Math.max(currentCount, previousCount, 1);
+  const difference = currentCount - previousCount;
+  const ChangeIcon = difference > 0 ? ArrowUpRight : ArrowDownRight;
+  const changeLabel = difference === 0
+    ? 'Sin cambio respecto a la semana anterior'
+    : `${difference > 0 ? '+' : ''}${difference} ${Math.abs(difference) === 1 ? 'tarea' : 'tareas'} vs. semana anterior`;
+
+  return (
+    <Card className="history-comparison">
+      <div className="history-comparison__heading">
+        <div>
+          <h2 className="section-title">Comparación semanal</h2>
+          <p className="history-comparison__subtitle">Tareas completadas</p>
+        </div>
+        <p className={`history-comparison__change ${difference > 0 ? 'is-positive' : difference < 0 ? 'is-negative' : ''}`}>
+          {difference !== 0 && <ChangeIcon size={16} aria-hidden="true" />}
+          {changeLabel}
+        </p>
+      </div>
+
+      <div className="history-comparison__rows">
+        {[
+          { label: 'Esta semana', range: formatWeekRange(currentStart), count: currentCount, color: 'blue' },
+          { label: 'Semana anterior', range: formatWeekRange(previousStart), count: previousCount, color: 'coral' },
+        ].map((week) => (
+          <div className="history-comparison__row" key={week.label}>
+            <div className="history-comparison__label">
+              <span>{week.label}</span>
+              <span className="history-comparison__range">{week.range}</span>
+            </div>
+            <div className="history-comparison__bar-line">
+              <div className={`history-comparison__bar history-comparison__bar--${week.color}`}>
+                <span style={{ width: `${(week.count / maxCount) * 100}%` }} />
+              </div>
+              <strong>{week.count}</strong>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
 }
 
 function HistoryItem({
@@ -136,6 +211,8 @@ export default function TasksHistoryView() {
           </p>
         </div>
       </div>
+
+      <WeeklyComparison tasks={completedTasks} />
 
       {completedTasks.length ? (
         <ul className="history-list">
