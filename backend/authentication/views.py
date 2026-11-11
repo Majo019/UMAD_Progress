@@ -151,6 +151,12 @@ def me_view(request):
             profile.interests = data['interests']
         if 'wheel' in data and isinstance(data['wheel'], list):
             profile.wheel = data['wheel']
+        if 'avatar_look' in data and isinstance(data['avatar_look'], dict):
+            # Solo se guardan claves conocidas del personalizador, con valores cortos tipo texto
+            allowed = ('skin', 'hair', 'hairStyle', 'outfit', 'accent')
+            profile.avatar_look = {
+                k: str(v)[:20] for k, v in data['avatar_look'].items() if k in allowed
+            }
         if 'wheel_quiz_completed' in data:
             profile.wheel_quiz_completed = bool(data['wheel_quiz_completed'])
 

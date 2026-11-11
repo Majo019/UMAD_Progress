@@ -1,6 +1,5 @@
-import { createContext, useCallback, useContext, useMemo } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
-import { addDays, toISODate } from '../utils/date';
 
 /**
  * CalendarContext
@@ -39,28 +38,37 @@ export const EVENT_TYPES = {
   personal: { label: 'Personal', color: 'neutral' },
 };
 
-function seedEvents() {
-  const t = new Date();
-  const d = (offset) => toISODate(addDays(t, offset));
-  return [
-    { id: 'e1', title: 'Entrega de Proyecto', date: d(0), time: '14:00', detail: 'UI/UX Avanzado', type: 'entrega', difficulty: 'dificil' },
-    { id: 'e2', title: 'Reunión de Equipo', date: d(0), time: '16:30', detail: 'Sala Virtual B', type: 'reunion', difficulty: 'tranquila' },
-    { id: 'e3', title: 'Bloque de estudio: Bases de Datos', date: d(1), time: '10:00', detail: 'Biblioteca', type: 'estudio', difficulty: 'media' },
-    { id: 'e4', title: 'Examen parcial de Cálculo', date: d(3), time: '08:00', detail: 'Aula 204', type: 'examen', difficulty: 'dificil' },
-    { id: 'e5', title: 'Entrega reporte de lectura', date: d(6), time: '23:59', detail: 'Ética Profesional', type: 'entrega', difficulty: 'media' },
-    { id: 'e6', title: 'Asesoría con el profe', date: d(8), time: '12:00', detail: 'Cubículo 3', type: 'reunion', difficulty: 'tranquila' },
-    { id: 'e7', title: 'Partido de fútbol', date: d(10), time: '18:00', detail: 'Cancha UMAD', type: 'personal', difficulty: 'tranquila' },
-    { id: 'e8', title: 'Entrega final de Frontend', date: d(13), time: '09:00', detail: 'Ingeniería de Software', type: 'entrega', difficulty: 'dificil' },
-    { id: 'e9', title: 'Sesión de estudio en grupo', date: d(-3), time: '17:00', detail: 'Sala Virtual A', type: 'estudio', difficulty: 'media' },
-  ];
-}
+/**
+ * Los eventos de ejemplo (e1–e9) ya no se generan. Esta lista sirve para limpiar
+ * a quienes los tenían guardados en el navegador de versiones anteriores.
+ */
+const LEGACY_SEED_EVENTS = {
+  e1: 'Entrega de Proyecto',
+  e2: 'Reunión de Equipo',
+  e3: 'Bloque de estudio: Bases de Datos',
+  e4: 'Examen parcial de Cálculo',
+  e5: 'Entrega reporte de lectura',
+  e6: 'Asesoría con el profe',
+  e7: 'Partido de fútbol',
+  e8: 'Entrega final de Frontend',
+  e9: 'Sesión de estudio en grupo',
+};
+
+const isLegacySeedEvent = (event) => LEGACY_SEED_EVENTS[event?.id] === event?.title;
 
 const byTime = (a, b) => (a.time || '').localeCompare(b.time || '');
 
 const CalendarContext = createContext(null);
 
 export function CalendarProvider({ children }) {
-  const [events, setEvents] = usePersistentState('up:events', seedEvents);
+  const [events, setEvents] = usePersistentState('up:events', []);
+
+  // Borra los eventos de ejemplo que hayan quedado guardados en este navegador
+  useEffect(() => {
+    if (events.some(isLegacySeedEvent)) {
+      setEvents((prev) => prev.filter((e) => !isLegacySeedEvent(e)));
+    }
+  }, [events, setEvents]);
 
   const addEvent = useCallback(
     (event) => setEvents((prev) => [...prev, { ...event, id: `e-${Date.now()}` }]),
@@ -94,7 +102,7 @@ export function CalendarProvider({ children }) {
       addEvent,
       updateEvent,
       removeEvent,
-      resetEvents: () => setEvents(seedEvents()),
+      resetEvents: () => setEvents([]),
     }),
     [events, eventsByDate, addEvent, updateEvent, removeEvent, setEvents],
   );

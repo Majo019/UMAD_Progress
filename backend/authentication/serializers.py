@@ -9,7 +9,7 @@ User = get_user_model()
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['name', 'career', 'semester', 'goals', 'interests', 'wheel_quiz_completed', 'wheel']
+        fields = ['name', 'career', 'semester', 'goals', 'interests', 'wheel_quiz_completed', 'wheel', 'avatar_look']
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -20,13 +20,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
     interests = serializers.SerializerMethodField()
     wheel = serializers.SerializerMethodField()
     wheel_quiz_completed = serializers.SerializerMethodField()
+    avatar_look = serializers.SerializerMethodField()
     level = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'name', 'career', 'semester',
-            'goals', 'interests', 'wheel', 'wheel_quiz_completed', 'level'
+            'goals', 'interests', 'wheel', 'wheel_quiz_completed', 'avatar_look', 'level'
         ]
 
     def _profile(self, obj):
@@ -59,6 +60,10 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_wheel_quiz_completed(self, obj):
         p = self._profile(obj)
         return p.wheel_quiz_completed if p else False
+
+    def get_avatar_look(self, obj):
+        p = self._profile(obj)
+        return p.avatar_look if p and p.avatar_look else {}
 
     def get_level(self, obj):
         avatar = getattr(obj, 'avatar', None)

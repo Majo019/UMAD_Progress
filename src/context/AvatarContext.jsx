@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useAuth } from './AuthContext';
+import { DEFAULT_LOOK, normalizeLook } from '../components/avatar/sprites';
 
 /**
  * AvatarContext
@@ -48,6 +49,7 @@ export function AvatarProvider({ children }) {
   const [avatar, setAvatar] = usePersistentState('up:avatar', INITIAL_AVATAR);
   const [wheel, setWheel] = usePersistentState('up:wheel', INITIAL_WHEEL);
   const [quizOpen, setQuizOpen] = usePersistentState('up:wheelQuizPending', false);
+  const [look, setLookState] = usePersistentState('up:avatarLook', DEFAULT_LOOK);
 
   // Migración: quien tenía el nivel 14 por defecto pasa a nivel 1
   useEffect(() => {
@@ -84,6 +86,25 @@ export function AvatarProvider({ children }) {
       );
     }
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Si la persona ya personalizó su avatar en otro dispositivo, se carga al iniciar sesión
+  useEffect(() => {
+    if (user?.avatar_look && typeof user.avatar_look === 'object' && Object.keys(user.avatar_look).length) {
+      setLookState(normalizeLook(user.avatar_look));
+    }
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Guarda la apariencia del avatar (local + perfil en el servidor). */
+  const setLook = useCallback(
+    (nextLook) => {
+      const clean = normalizeLook(nextLook);
+      setLookState(clean);
+      if (isAuthenticated) {
+        updateProfile?.({ avatar_look: clean });
+      }
+    },
+    [setLookState, isAuthenticated, updateProfile],
+  );
 
   /** reward: { vida?, alimento?, carino?, xp? } — acepta negativos. */
   const applyReward = useCallback(
@@ -136,12 +157,16 @@ export function AvatarProvider({ children }) {
     setQuizOpen(true);
   }, [setQuizOpen]);
 
+  // El primer diagnóstico (usuario nuevo / recién iniciado) es obligatorio: no se puede cerrar ni omitir
+  const quizMandatory = Boolean(isAuthenticated && user && user.wheel_quiz_completed === false);
+
   const closeWheelQuiz = useCallback(() => {
+    if (quizMandatory) return;
     setQuizOpen(false);
     if (isAuthenticated && user?.wheel_quiz_completed === false) {
       updateProfile?.({ wheel_quiz_completed: true });
     }
-  }, [setQuizOpen, isAuthenticated, user?.wheel_quiz_completed, updateProfile]);
+  }, [quizMandatory, setQuizOpen, isAuthenticated, user?.wheel_quiz_completed, updateProfile]);
 
   const completeWheelQuiz = useCallback(
     (scoresByKey = {}) => {
@@ -164,8 +189,11 @@ export function AvatarProvider({ children }) {
   const value = useMemo(
     () => ({
       ...avatar,
+      look: normalizeLook(look),
+      setLook,
       wheel,
       quizOpen,
+      quizMandatory,
       applyReward,
       setWheelValue,
       boostArea,
@@ -179,8 +207,11 @@ export function AvatarProvider({ children }) {
     }),
     [
       avatar,
+      look,
+      setLook,
       wheel,
       quizOpen,
+      quizMandatory,
       applyReward,
       setWheelValue,
       boostArea,

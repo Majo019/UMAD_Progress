@@ -11,6 +11,7 @@ class UserProfile(models.Model):
     interests = models.JSONField(default=list, blank=True)
     wheel_quiz_completed = models.BooleanField(default=False)
     wheel = models.JSONField(default=list, blank=True)
+    avatar_look = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return f"{self.user.username} ({self.name or 'Sin nombre'})"

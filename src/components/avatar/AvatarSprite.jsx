@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { SPRITE_PALETTE, spriteFor } from './sprites';
+import { normalizeLook, paletteForLook, spriteFor } from './sprites';
 
 /**
  * Sprite pixel-art puro (SVG). No incluye badge de nivel ni barras.
@@ -7,10 +7,13 @@ import { SPRITE_PALETTE, spriteFor } from './sprites';
  *   - size: ancho en px
  *   - level: número (elige etapa)
  *   - mood: 'feliz' | 'neutral' | 'triste' | 'motivado'
+ *   - look: { skin, hair, hairStyle, outfit, accent } (opcional, personalización)
  *   - className: opcional
  */
-export default function AvatarSprite({ size = 96, level = 1, mood = 'neutral', className = '' }) {
-  const grid = useMemo(() => spriteFor(level, mood), [level, mood]);
+export default function AvatarSprite({ size = 96, level = 1, mood = 'neutral', look, className = '' }) {
+  const safeLook = useMemo(() => normalizeLook(look), [look]);
+  const palette = useMemo(() => paletteForLook(safeLook), [safeLook]);
+  const grid = useMemo(() => spriteFor(level, mood, safeLook.hairStyle), [level, mood, safeLook.hairStyle]);
   const w = grid[0].length;
   const h = grid.length;
 
@@ -33,7 +36,7 @@ export default function AvatarSprite({ size = 96, level = 1, mood = 'neutral', c
               y={y}
               width="1"
               height="1"
-              fill={SPRITE_PALETTE[c] || '#000'}
+              fill={palette[c] || '#000'}
             />
           ),
         ),

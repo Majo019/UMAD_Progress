@@ -1,9 +1,5 @@
 import { BarChart3 } from 'lucide-react';
 
-/**
- * Rueda de la Vida — gráfica polar (cada área es un "gajo" cuyo largo = valor 0–10).
- * SVG puro, sin librerías.
- */
 
 const SEGMENT_COLORS = [
   'var(--wheel-1)',

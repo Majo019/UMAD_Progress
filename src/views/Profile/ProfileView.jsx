@@ -7,6 +7,7 @@ import {
   Info,
   LogOut,
   Moon,
+  Palette,
   PieChart,
   Pencil,
   RotateCcw,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Button, Card, Field, IconButton, Modal } from '../../components/ui';
 import AvatarWidget from '../../components/avatar/AvatarWidget';
+import AvatarCustomizer from '../../components/avatar/AvatarCustomizer';
 import { useAuth, useAvatar, useCalendar, useTheme } from '../../context';
 import { clearPersistedState } from '../../hooks/usePersistentState';
 import LifeWheel from './LifeWheel';
@@ -103,7 +105,7 @@ function SettingsModal({ open, onClose }) {
           }}
         >
           <RotateCcw size={18} />
-          <span>Restablecer datos de ejemplo</span>
+          <span>Restablecer mis datos</span>
         </button>
         <button
           type="button"
@@ -130,7 +132,7 @@ export default function ProfileView() {
   const [selectedArea, setSelectedArea] = useState(null);
   const [editingWheel, setEditingWheel] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
-  const [modal, setModal] = useState(null); // 'profile' | 'settings'
+  const [modal, setModal] = useState(null); // 'profile' | 'settings' | 'avatar'
 
   // El engrane del header abre Configuración directamente
   useEffect(() => {
@@ -145,6 +147,9 @@ export default function ProfileView() {
       {/* Avatar + estado — Widget 4.5 */}
       <Card className="avatar-card">
         <AvatarWidget size={88} />
+        <Button variant="secondary" size="sm" icon={Palette} onClick={() => setModal('avatar')}>
+          Personalizar avatar
+        </Button>
       </Card>
 
       {user && (
@@ -238,6 +243,7 @@ export default function ProfileView() {
         </button>
       </Card>
 
+      {modal === 'avatar' && <AvatarCustomizer open onClose={() => setModal(null)} />}
       {modal === 'profile' && <EditProfileModal open onClose={() => setModal(null)} />}
       {modal === 'settings' && <SettingsModal open onClose={() => setModal(null)} />}
     </section>

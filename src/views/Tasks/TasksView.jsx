@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CalendarCheck, ChevronLeft, ChevronRight, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CalendarCheck, ChevronLeft, ChevronRight, MoreVertical, Pencil, PlayCircle, Plus, Trash2, X } from 'lucide-react';
 import { Button, Card, Chip, EmptyState, IconButton, SegmentedControl } from '../../components/ui';
 import { DIFFICULTY, DIFFICULTY_ORDER, EVENT_TYPES, getDifficulty, useCalendar } from '../../context';
 import {
@@ -264,6 +264,47 @@ function WeekBoard({ eventsByDate, selected, onSelectDay, onShiftWeek, onEdit, o
   );
 }
 
+/* ---------- Video explicativo ---------- */
+
+const TASKS_VIDEO_SRC = `${import.meta.env.BASE_URL}videos/explicacion-tareas.mp4`;
+
+function TasksVideoCard() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Card className="tasks-video">
+      <div className="row-between">
+        <div className="tasks-video__text">
+          <h2 className="section-title">¿Cómo funcionan las tareas?</h2>
+          <p className="tasks-video__hint">Mira el video para aprender a usar esta pantalla.</p>
+        </div>
+        <Button
+          variant={open ? 'secondary' : 'blue'}
+          size="sm"
+          icon={open ? X : PlayCircle}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? 'Cerrar' : 'Ver video'}
+        </Button>
+      </div>
+      {open && (
+        <video
+          className="tasks-video__player"
+          src={TASKS_VIDEO_SRC}
+          controls
+          autoPlay
+          playsInline
+          preload="metadata"
+          controlsList="nodownload"
+        >
+          Tu navegador no puede reproducir este video.
+        </video>
+      )}
+    </Card>
+  );
+}
+
 /* ---------- Pantalla ---------- */
 
 export default function TasksView() {
@@ -286,6 +327,8 @@ export default function TasksView() {
   return (
     <section className="view tasks">
       <h1 className="page-title">Tareas</h1>
+
+      <TasksVideoCard />
 
       <SegmentedControl options={VIEW_OPTIONS} value={view} onChange={setView} label="Tipo de vista" />
 

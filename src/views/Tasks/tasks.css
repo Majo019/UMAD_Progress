@@ -369,3 +369,29 @@
   background: var(--tint-green);
   border-color: var(--color-green);
 }
+
+
+/* Video explicativo de tareas */
+.tasks-video {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tasks-video__text {
+  min-width: 0;
+}
+
+.tasks-video__hint {
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+}
+
+.tasks-video__player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md, 12px);
+  background: #000;
+  display: block;
+}

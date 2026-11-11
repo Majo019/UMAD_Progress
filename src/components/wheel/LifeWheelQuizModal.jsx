@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   CheckCircle2,
   ClipboardCheck,
+  Play,
   Sparkles,
+  Volume2,
 } from 'lucide-react';
 import { Button, Chip, Modal } from '../ui';
 import { useAvatar } from '../../context';
@@ -116,18 +118,87 @@ const ANSWER_OPTIONS = [
   { value: 2, label: 'Sí' },
 ];
 
+const QUESTIONS_VIDEO_SRC = `${import.meta.env.BASE_URL}videos/explicacion-preguntas.mp4`;
+
+/** Todas las preguntas empiezan sin responder (null): no se pueden saltar. */
 function createInitialAnswers() {
   const initial = {};
   LIFE_WHEEL_QUESTIONS.forEach((section) => {
-    initial[section.key] = section.questions.map(() => 0);
+    initial[section.key] = section.questions.map(() => null);
   });
   return initial;
 }
 
+const isAnswered = (v) => v !== null && v !== undefined;
+
+/**
+ * Paso previo al cuestionario: reproduce solo el video de explicación.
+ * Intenta arrancar con sonido; si el navegador lo bloquea, arranca en silencio
+ * y avisa para que la persona active el audio.
+ */
+function ExplanationVideo({ onFinished }) {
+  const videoRef = useRef(null);
+  const [mutedFallback, setMutedFallback] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = false;
+    const attempt = video.play();
+    if (attempt?.catch) {
+      attempt.catch(() => {
+        // Autoplay con sonido bloqueado → reintenta en silencio
+        video.muted = true;
+        setMutedFallback(true);
+        video.play().catch(() => {
+          /* el usuario podrá darle play con los controles */
+        });
+      });
+    }
+  }, []);
+
+  return (
+    <div className="wheel-quiz__video">
+      <video
+        ref={videoRef}
+        className="wheel-quiz__video-player"
+        src={QUESTIONS_VIDEO_SRC}
+        autoPlay
+        playsInline
+        controls
+        controlsList="nodownload"
+        preload="auto"
+        onEnded={() => onFinished(true)}
+        onError={() => onFinished(true)}
+        onVolumeChange={(e) => e.currentTarget.muted === false && setMutedFallback(false)}
+      >
+        Tu navegador no puede reproducir este video.
+      </video>
+      {mutedFallback && (
+        <p className="wheel-quiz__video-note">
+          <Volume2 size={14} aria-hidden="true" /> El video empezó sin sonido. Usa los controles para activarlo.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function LifeWheelQuizModal() {
-  const { quizOpen, closeWheelQuiz, completeWheelQuiz } = useAvatar();
+  const { quizOpen, quizMandatory, closeWheelQuiz, completeWheelQuiz } = useAvatar();
+  const [phase, setPhase] = useState('video'); // 'video' | 'questions'
+  const [videoDone, setVideoDone] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState(createInitialAnswers);
+
+  // Cada vez que se abre el cuestionario: primero el video, luego las preguntas desde cero
+  useEffect(() => {
+    if (quizOpen) {
+      setPhase('video');
+      setVideoDone(false);
+      setStepIndex(0);
+      setAnswers(createInitialAnswers());
+    }
+  }, [quizOpen]);
 
   const currentSection = LIFE_WHEEL_QUESTIONS[stepIndex];
   const isFirst = stepIndex === 0;
@@ -142,32 +213,85 @@ export default function LifeWheelQuizModal() {
     return scores;
   }, [answers]);
 
+  // Un área está completa cuando sus 5 preguntas tienen respuesta
+  const sectionComplete = useMemo(
+    () => LIFE_WHEEL_QUESTIONS.map((sec) => (answers[sec.key] || []).every(isAnswered)),
+    [answers],
+  );
+  // Primera área con preguntas pendientes: no se puede pasar más allá de ella
+  const firstPending = sectionComplete.indexOf(false);
+  const furthestAllowed = firstPending === -1 ? LIFE_WHEEL_QUESTIONS.length - 1 : firstPending;
+  const currentComplete = sectionComplete[stepIndex];
+  const allComplete = firstPending === -1;
+  const pendingInCurrent = (answers[currentSection.key] || []).filter((v) => !isAnswered(v)).length;
+
   if (!quizOpen) return null;
 
   const setQuestionAnswer = (areaKey, qIdx, points) => {
     setAnswers((prev) => {
-      const nextArea = [...(prev[areaKey] || [0, 0, 0, 0, 0])];
+      const nextArea = [...(prev[areaKey] || [null, null, null, null, null])];
       nextArea[qIdx] = points;
       return { ...prev, [areaKey]: nextArea };
     });
   };
 
   const toggleQuestion = (areaKey, qIdx) => {
-    const current = answers[areaKey]?.[qIdx] ?? 0;
+    const current = answers[areaKey]?.[qIdx];
     setQuestionAnswer(areaKey, qIdx, current === 2 ? 0 : 2);
   };
 
   const handleFinish = () => {
+    if (!allComplete) return;
     completeWheelQuiz(scoresByArea);
     setStepIndex(0);
   };
 
   const currentScore = scoresByArea[currentSection.key] ?? 0;
 
+  /* ---------- Paso 1: video de explicación ---------- */
+  if (phase === 'video') {
+    const canContinue = !quizMandatory || videoDone;
+    return (
+      <Modal
+        open={quizOpen}
+        onClose={closeWheelQuiz}
+        dismissible={!quizMandatory}
+        title="Antes de empezar"
+        footer={
+          <>
+            {!quizMandatory && (
+              <Button type="button" variant="ghost" onClick={closeWheelQuiz}>
+                Cancelar
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="primary"
+              icon={Play}
+              disabled={!canContinue}
+              onClick={() => setPhase('questions')}
+            >
+              {canContinue ? 'Comenzar preguntas' : 'Mira el video para continuar'}
+            </Button>
+          </>
+        }
+      >
+        <div className="wheel-quiz">
+          <p className="wheel-quiz__intro">
+            Mira este video corto: te explica cómo responder el diagnóstico de tu <strong>Rueda de la Vida</strong>.
+          </p>
+          <ExplanationVideo onFinished={setVideoDone} />
+        </div>
+      </Modal>
+    );
+  }
+
+  /* ---------- Paso 2: preguntas detonadoras ---------- */
   return (
     <Modal
       open={quizOpen}
       onClose={closeWheelQuiz}
+      dismissible={!quizMandatory}
       title="Diagnóstico · Rueda de la Vida"
       footer={
         <>
@@ -181,9 +305,11 @@ export default function LifeWheelQuizModal() {
               Anterior
             </Button>
           ) : (
-            <Button type="button" variant="ghost" onClick={closeWheelQuiz}>
-              Omitir por ahora
-            </Button>
+            !quizMandatory && (
+              <Button type="button" variant="ghost" onClick={closeWheelQuiz}>
+                Cancelar
+              </Button>
+            )
           )}
 
           {!isLast ? (
@@ -191,12 +317,13 @@ export default function LifeWheelQuizModal() {
               type="button"
               variant="primary"
               icon={ArrowRight}
+              disabled={!currentComplete}
               onClick={() => setStepIndex((i) => Math.min(LIFE_WHEEL_QUESTIONS.length - 1, i + 1))}
             >
               Siguiente ({stepIndex + 1}/{LIFE_WHEEL_QUESTIONS.length})
             </Button>
           ) : (
-            <Button type="button" variant="primary" icon={Sparkles} onClick={handleFinish}>
+            <Button type="button" variant="primary" icon={Sparkles} disabled={!allComplete} onClick={handleFinish}>
               Guardar mi Rueda
             </Button>
           )}
@@ -205,13 +332,15 @@ export default function LifeWheelQuizModal() {
     >
       <div className="wheel-quiz">
         <p className="wheel-quiz__intro">
-          Responde las afirmaciones de cada área para calcular tu <strong>Rueda de la Vida</strong> inicial (de 0 a 10 puntos por categoría).
+          Responde <strong>todas</strong> las afirmaciones de cada área para calcular tu <strong>Rueda de la Vida</strong> inicial
+          (de 0 a 10 puntos por categoría).
         </p>
 
-        {/* Navegador de las 8 áreas */}
+        {/* Navegador de las 8 áreas: solo se puede ir a áreas ya completadas o a la actual */}
         <div className="wheel-quiz__tabs" role="tablist" aria-label="Áreas de la Rueda de la Vida">
           {LIFE_WHEEL_QUESTIONS.map((sec, idx) => {
             const active = idx === stepIndex;
+            const locked = idx > furthestAllowed;
             const score = scoresByArea[sec.key] ?? 0;
             return (
               <button
@@ -219,12 +348,15 @@ export default function LifeWheelQuizModal() {
                 type="button"
                 role="tab"
                 aria-selected={active}
-                className={`wheel-quiz__tab ${active ? 'is-active' : ''} ${score > 0 ? 'has-score' : ''}`}
+                disabled={locked}
+                className={`wheel-quiz__tab ${active ? 'is-active' : ''} ${sectionComplete[idx] ? 'has-score' : ''} ${
+                  locked ? 'is-locked' : ''
+                }`}
                 onClick={() => setStepIndex(idx)}
               >
                 <span className="wheel-quiz__tab-num">{sec.number}.</span>
                 <span className="wheel-quiz__tab-label">{sec.label}</span>
-                <span className="wheel-quiz__tab-score">{score}/10</span>
+                <span className="wheel-quiz__tab-score">{sectionComplete[idx] ? `${score}/10` : '–'}</span>
               </button>
             );
           })}
@@ -248,7 +380,8 @@ export default function LifeWheelQuizModal() {
         {/* Lista de las 5 preguntas del área actual */}
         <ul className="wheel-quiz__list">
           {currentSection.questions.map((question, qIdx) => {
-            const value = answers[currentSection.key]?.[qIdx] ?? 0;
+            const raw = answers[currentSection.key]?.[qIdx];
+            const value = isAnswered(raw) ? raw : null;
             const isChecked = value === 2;
             const isPartial = value === 1;
 
@@ -292,6 +425,13 @@ export default function LifeWheelQuizModal() {
           })}
         </ul>
 
+        {!currentComplete && (
+          <p className="wheel-quiz__pending" role="status">
+            Te falta{pendingInCurrent === 1 ? '' : 'n'} {pendingInCurrent} pregunta{pendingInCurrent === 1 ? '' : 's'} por responder
+            en esta área.
+          </p>
+        )}
+
         {/* Resumen rápido en el último paso */}
         {isLast && (
           <div className="wheel-quiz__summary">
@@ -300,10 +440,10 @@ export default function LifeWheelQuizModal() {
               <span>Resumen de tu Rueda de la Vida</span>
             </div>
             <div className="wheel-quiz__summary-grid">
-              {LIFE_WHEEL_QUESTIONS.map((sec) => (
+              {LIFE_WHEEL_QUESTIONS.map((sec, idx) => (
                 <div key={sec.key} className="wheel-quiz__summary-item">
                   <span>{sec.label}</span>
-                  <strong>{scoresByArea[sec.key]}/10</strong>
+                  <strong>{sectionComplete[idx] ? `${scoresByArea[sec.key]}/10` : 'Pendiente'}</strong>
                 </div>
               ))}
             </div>

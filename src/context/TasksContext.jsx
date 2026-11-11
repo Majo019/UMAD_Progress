@@ -18,53 +18,32 @@ const TASK_REWARD = {
 
 const TASK_AREA_POINTS = 1;
 
-function seedTasks() {
-  const now = new Date().toISOString();
+/**
+ * Las tareas de ejemplo (t1, t2, t3) ya no se generan. Esta lista sirve para
+ * limpiar a quienes las tenían guardadas en el navegador de versiones anteriores.
+ */
+const LEGACY_SEED_TASKS = {
+  t1: 'Terminar avance del proyecto',
+  t2: 'Repasar Base de Datos',
+  t3: 'Revisar calendario',
+};
 
-  return [
-    {
-      id: 't1',
-      title: 'Terminar avance del proyecto',
-      description: 'Completar la parte pendiente del frontend',
-      dueDate: '',
-      priority: 'alta',
-      area: 'trabajo',
-      completed: false,
-      completedAt: null,
-      createdAt: now,
-    },
-    {
-      id: 't2',
-      title: 'Repasar Base de Datos',
-      description: 'Revisar consultas y ejercicios vistos en clase',
-      dueDate: '',
-      priority: 'media',
-      area: 'trabajo',
-      completed: false,
-      completedAt: null,
-      createdAt: now,
-    },
-    {
-      id: 't3',
-      title: 'Revisar calendario',
-      description: 'Ver próximas entregas de la semana',
-      dueDate: '',
-      priority: 'baja',
-      area: 'retrospeccion',
-      completed: true,
-      completedAt: now,
-      createdAt: now,
-    },
-  ];
-}
+const isLegacySeedTask = (task) => LEGACY_SEED_TASKS[task?.id] === task?.title;
 
 const TasksContext = createContext(null);
 
 export function TasksProvider({ children }) {
-  const [tasks, setTasks] = usePersistentState('up:tasks', seedTasks);
+  const [tasks, setTasks] = usePersistentState('up:tasks', []);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { applyReward, boostArea } = useAvatar();
+
+  // Borra las tareas de ejemplo que hayan quedado guardadas en este navegador
+  useEffect(() => {
+    if (tasks.some(isLegacySeedTask)) {
+      setTasks((prev) => prev.filter((task) => !isLegacySeedTask(task)));
+    }
+  }, [tasks, setTasks]);
 
   // Sincronizar tareas con el backend Django (/api/tasks/)
   const refreshTasks = useCallback(async () => {
@@ -285,7 +264,7 @@ export function TasksProvider({ children }) {
       reopenTask,
       refreshTasks,
 
-      resetTasks: () => setTasks(seedTasks()),
+      resetTasks: () => setTasks([]),
     }),
     [
       tasks,
