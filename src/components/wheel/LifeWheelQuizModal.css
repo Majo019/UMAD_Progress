@@ -1,0 +1,201 @@
+.wheel-quiz {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.wheel-quiz__intro {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.wheel-quiz__intro strong {
+  color: var(--color-text);
+}
+
+.wheel-quiz__tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.wheel-quiz__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all var(--duration-fast);
+}
+
+.wheel-quiz__tab:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.wheel-quiz__tab.has-score {
+  border-color: rgba(62, 207, 110, 0.35);
+}
+
+.wheel-quiz__tab.is-active {
+  background: var(--color-coral-soft);
+  border-color: var(--color-coral-soft);
+  color: var(--color-text-on-accent);
+}
+
+.wheel-quiz__tab-score {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.wheel-quiz__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-1);
+}
+
+.wheel-quiz__section-title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.wheel-quiz__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.wheel-quiz__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: border-color var(--duration-fast), background var(--duration-fast);
+}
+
+.wheel-quiz__item.is-yes {
+  border-color: rgba(62, 207, 110, 0.45);
+  background: var(--tint-green);
+}
+
+.wheel-quiz__item.is-partial {
+  border-color: rgba(245, 165, 36, 0.45);
+  background: var(--tint-amber);
+}
+
+.wheel-quiz__item-main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+.wheel-quiz__check {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-border-strong);
+  background: var(--color-surface-2);
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: #fff;
+  transition: all var(--duration-fast);
+}
+
+.wheel-quiz__check.is-on {
+  background: var(--color-coral);
+  border-color: var(--color-coral);
+}
+
+.wheel-quiz__question {
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.wheel-quiz__options {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.wheel-quiz__opt {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font-size: var(--fs-xxs);
+  font-weight: 600;
+  transition: all var(--duration-fast);
+}
+
+.wheel-quiz__opt:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.wheel-quiz__opt.is-selected {
+  background: var(--color-coral-soft);
+  border-color: var(--color-coral-soft);
+  color: var(--color-text-on-accent);
+}
+
+.wheel-quiz__summary {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.wheel-quiz__summary-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--color-green);
+}
+
+.wheel-quiz__summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px var(--space-4);
+  font-size: var(--fs-xs);
+}
+
+.wheel-quiz__summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+}
+
+.wheel-quiz__summary-item strong {
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}

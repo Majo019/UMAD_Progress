@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Check, Sparkles } from 'lucide-react';
 import { Button, Chip } from '../../components/ui';
-import { useAuth } from '../../context';
+import { useAuth, useAvatar } from '../../context';
 import { usePersistentState } from '../../hooks/usePersistentState';
 import AuthLayout from './AuthLayout';
 import AuthField from './components/AuthField';
@@ -41,6 +41,7 @@ const EMPTY_DRAFT = {
 
 export default function RegisterView() {
   const { register } = useAuth();
+  const { resetAvatar, openWheelQuiz } = useAvatar();
   const navigate = useNavigate();
 
   const [draft, setDraft] = usePersistentState('up:registerDraft', EMPTY_DRAFT);
@@ -109,6 +110,8 @@ export default function RegisterView() {
         goals: draft.goals.trim(),
         interests: draft.interests,
       });
+      resetAvatar();
+      openWheelQuiz();
       setDraft(EMPTY_DRAFT);
       navigate('/', { replace: true });
     } catch (err) {

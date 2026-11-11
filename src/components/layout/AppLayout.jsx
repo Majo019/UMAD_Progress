@@ -8,6 +8,7 @@ import {
   User,
   Users,
 } from 'lucide-react';
+import LifeWheelQuizModal from '../wheel/LifeWheelQuizModal';
 import './layout.css';
 
 const NAV_ITEMS = [
@@ -67,6 +68,7 @@ export default function AppLayout() {
         <Outlet />
       </main>
       <BottomNav />
+      <LifeWheelQuizModal />
     </div>
   );
 }

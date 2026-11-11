@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { useAuth } from './AuthContext';
 
 /**
  * AvatarContext
@@ -21,21 +22,21 @@ export const STAT_META = {
 export const XP_PER_LEVEL = 100;
 
 const INITIAL_AVATAR = {
-  level: 14,
-  xp: 40,
+  level: 1,
+  xp: 0,
   stats: { vida: 85, alimento: 62, carino: 90 },
 };
 
 // Orden en sentido horario empezando arriba (como en el mockup)
 const INITIAL_WHEEL = [
-  { key: 'amigos', label: 'Amigos', value: 8 },
-  { key: 'trabajo', label: 'Trabajo', value: 6 },
-  { key: 'familia', label: 'Familia', value: 7 },
+  { key: 'amigos', label: 'Amigos', value: 5 },
+  { key: 'trabajo', label: 'Trabajo', value: 5 },
+  { key: 'familia', label: 'Familia', value: 5 },
   { key: 'deporte', label: 'Deporte', value: 5 },
-  { key: 'economia', label: 'Economía', value: 4 },
-  { key: 'retrospeccion', label: 'Retrospección', value: 6 },
-  { key: 'ocio', label: 'Ocio', value: 7 },
-  { key: 'alimentacion', label: 'Alimentación', value: 6 },
+  { key: 'economia', label: 'Economía', value: 5 },
+  { key: 'retrospeccion', label: 'Retrospección', value: 5 },
+  { key: 'ocio', label: 'Ocio', value: 5 },
+  { key: 'alimentacion', label: 'Alimentación', value: 5 },
 ];
 
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
@@ -43,8 +44,17 @@ const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const AvatarContext = createContext(null);
 
 export function AvatarProvider({ children }) {
+  const { user, isAuthenticated, updateProfile } = useAuth();
   const [avatar, setAvatar] = usePersistentState('up:avatar', INITIAL_AVATAR);
   const [wheel, setWheel] = usePersistentState('up:wheel', INITIAL_WHEEL);
+  const [quizOpen, setQuizOpen] = usePersistentState('up:wheelQuizPending', false);
+
+  // Migración: quien tenía el nivel 14 por defecto pasa a nivel 1
+  useEffect(() => {
+    if (avatar.level === 14 && avatar.xp === 40) {
+      setAvatar((prev) => ({ ...prev, level: 1, xp: 0 }));
+    }
+  }, [avatar.level, avatar.xp, setAvatar]);
 
   // Migración: quien ya tenía guardada la rueda con "Espiritualidad" la ve renombrada
   useEffect(() => {
@@ -54,6 +64,26 @@ export function AvatarProvider({ children }) {
       );
     }
   }, [wheel, setWheel]);
+
+  // Si el usuario recién creó su cuenta (wheel_quiz_completed === false), abrir el cuestionario emergente
+  useEffect(() => {
+    if (isAuthenticated && user && user.wheel_quiz_completed === false) {
+      setQuizOpen(true);
+      setAvatar((prev) => (prev.level === 14 ? { ...prev, level: 1, xp: 0 } : prev));
+    }
+  }, [isAuthenticated, user, setQuizOpen, setAvatar]);
+
+  // Sincronizar rueda guardada en el perfil del usuario si existe
+  useEffect(() => {
+    if (Array.isArray(user?.wheel) && user.wheel.length === INITIAL_WHEEL.length) {
+      setWheel(
+        INITIAL_WHEEL.map((base) => {
+          const found = user.wheel.find((item) => item.key === base.key);
+          return found ? { ...base, value: clamp(Number(found.value) || 0, 0, 10) } : base;
+        }),
+      );
+    }
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** reward: { vida?, alimento?, carino?, xp? } — acepta negativos. */
   const applyReward = useCallback(
@@ -78,31 +108,88 @@ export function AvatarProvider({ children }) {
 
   const setWheelValue = useCallback(
     (key, value) => {
-      setWheel((prev) => prev.map((a) => (a.key === key ? { ...a, value: clamp(value, 0, 10) } : a)));
+      setWheel((prev) => {
+        const next = prev.map((a) => (a.key === key ? { ...a, value: clamp(value, 0, 10) } : a));
+        if (isAuthenticated) {
+          updateProfile?.({ wheel: next });
+        }
+        return next;
+      });
     },
-    [setWheel],
+    [setWheel, isAuthenticated, updateProfile],
   );
 
   const boostArea = useCallback(
     (key, amount = 1) => {
-      setWheel((prev) => prev.map((a) => (a.key === key ? { ...a, value: clamp(a.value + amount, 0, 10) } : a)));
+      setWheel((prev) => {
+        const next = prev.map((a) => (a.key === key ? { ...a, value: clamp(a.value + amount, 0, 10) } : a));
+        if (isAuthenticated) {
+          updateProfile?.({ wheel: next });
+        }
+        return next;
+      });
     },
-    [setWheel],
+    [setWheel, isAuthenticated, updateProfile],
+  );
+
+  const openWheelQuiz = useCallback(() => {
+    setQuizOpen(true);
+  }, [setQuizOpen]);
+
+  const closeWheelQuiz = useCallback(() => {
+    setQuizOpen(false);
+    if (isAuthenticated && user?.wheel_quiz_completed === false) {
+      updateProfile?.({ wheel_quiz_completed: true });
+    }
+  }, [setQuizOpen, isAuthenticated, user?.wheel_quiz_completed, updateProfile]);
+
+  const completeWheelQuiz = useCallback(
+    (scoresByKey = {}) => {
+      const nextWheel = INITIAL_WHEEL.map((area) => ({
+        ...area,
+        value: clamp(Number(scoresByKey[area.key] ?? area.value), 0, 10),
+      }));
+      setWheel(nextWheel);
+      setQuizOpen(false);
+      if (isAuthenticated) {
+        updateProfile?.({
+          wheel: nextWheel,
+          wheel_quiz_completed: true,
+        });
+      }
+    },
+    [setWheel, setQuizOpen, isAuthenticated, updateProfile],
   );
 
   const value = useMemo(
     () => ({
       ...avatar,
       wheel,
+      quizOpen,
       applyReward,
       setWheelValue,
       boostArea,
+      openWheelQuiz,
+      closeWheelQuiz,
+      completeWheelQuiz,
       resetAvatar: () => {
         setAvatar(INITIAL_AVATAR);
         setWheel(INITIAL_WHEEL);
       },
     }),
-    [avatar, wheel, applyReward, setWheelValue, boostArea, setAvatar, setWheel],
+    [
+      avatar,
+      wheel,
+      quizOpen,
+      applyReward,
+      setWheelValue,
+      boostArea,
+      openWheelQuiz,
+      closeWheelQuiz,
+      completeWheelQuiz,
+      setAvatar,
+      setWheel,
+    ],
   );
 
   return <AvatarContext.Provider value={value}>{children}</AvatarContext.Provider>;

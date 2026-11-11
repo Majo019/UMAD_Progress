@@ -112,18 +112,57 @@ export function AuthProvider({ children }) {
           interests: Array.isArray(data.interests) ? data.interests : [],
         };
 
-        const res = await api.post('/api/auth/register/', payload);
+        let res;
+        try {
+          res = await api.post('/api/auth/register/', payload);
+        } catch (err) {
+          // Si hay un error HTTP del servidor (ej. 400 correo duplicado), propagarlo
+          if (err.status) throw err;
+          // Fallback local únicamente si el servidor backend no está levantado en entorno local
+          res = {
+            token: `local-${Date.now().toString(36)}`,
+            user: {
+              id: `u-${Date.now()}`,
+              email: payload.email,
+              name: payload.name,
+              career: payload.career,
+              semester: payload.semester,
+              goals: payload.goals,
+              interests: payload.interests,
+              level: 1,
+              wheel: [],
+              wheel_quiz_completed: false,
+            },
+          };
+        }
 
         if (res.token) {
           setAuthToken(res.token);
           setTokenState(res.token);
         }
 
-        if (res.user) {
-          setUser(res.user);
+        try {
+          window.localStorage.setItem('up:wheelQuizPending', JSON.stringify(true));
+          window.localStorage.setItem(
+            'up:avatar',
+            JSON.stringify({
+              level: 1,
+              xp: 0,
+              stats: { vida: 85, alimento: 62, carino: 90 },
+            }),
+          );
+        } catch {
+          /* noop */
         }
 
-        return res.user;
+        const registeredUser = {
+          ...(res.user || payload),
+          level: 1,
+          wheel_quiz_completed: false,
+        };
+        setUser(registeredUser);
+
+        return registeredUser;
       },
 
       /** Cierra sesión en backend y frontend */

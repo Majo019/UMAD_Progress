@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
+  ClipboardCheck,
   History,
   Info,
   LogOut,
@@ -122,7 +123,7 @@ function SettingsModal({ open, onClose }) {
 
 export default function ProfileView() {
   const { user } = useAuth();
-  const { wheel, setWheelValue } = useAvatar();
+  const { wheel, setWheelValue, openWheelQuiz } = useAvatar();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -162,6 +163,12 @@ export default function ProfileView() {
             <PieChart size={20} aria-hidden="true" /> Rueda de la Vida
           </h2>
           <div className="wheel-card__actions">
+            <IconButton
+              icon={ClipboardCheck}
+              label="Responder cuestionario de la Rueda de la Vida"
+              className="icon-btn--sm"
+              onClick={openWheelQuiz}
+            />
             <IconButton
               icon={SlidersHorizontal}
               label={editingWheel ? 'Terminar edición' : 'Calificar áreas'}
