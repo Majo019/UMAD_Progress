@@ -34,7 +34,7 @@ export default function LoginView() {
       await login(email.trim(), password);
       navigate(from, { replace: true });
     } catch (err) {
-      setFormError('No pudimos validar tus datos, inténtalo de nuevo.');
+      setFormError(err.message || 'No pudimos validar tus datos, inténtalo de nuevo.');
     } finally {
       setSubmitting(false);
     }
@@ -53,15 +53,15 @@ export default function LoginView() {
     >
       <form className="stack auth__form-inner" onSubmit={onSubmit} noValidate>
         <AuthField
-          label="Correo"
+          label="Correo electrónico"
           type="email"
           autoComplete="email"
-          placeholder="nombre@umad.edu.mx"
+          placeholder="ejemplo@correo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onBlur={() => setTouched((t) => ({ ...t, email: true }))}
           error={emailError}
-          hint={!emailError && institutional ? '✓ Correo institucional UMAD' : undefined}
+          hint={!emailError && institutional ? '✓ Correo institucional UMAD detectado' : undefined}
         />
 
         <div className="auth__password-block">

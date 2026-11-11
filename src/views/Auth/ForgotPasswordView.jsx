@@ -68,10 +68,10 @@ export default function ForgotPasswordView() {
     >
       <form className="stack auth__form-inner" onSubmit={onSubmit} noValidate>
         <AuthField
-          label="Correo"
+          label="Correo electrónico"
           type="email"
           autoComplete="email"
-          placeholder="nombre@umad.edu.mx"
+          placeholder="ejemplo@correo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onBlur={() => setTouched(true)}

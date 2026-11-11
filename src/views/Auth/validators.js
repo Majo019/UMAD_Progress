@@ -2,14 +2,16 @@
 
 export const UMAD_DOMAIN = '@umad.edu.mx';
 
+/** Verifica si es correo institucional opcional (ya no es obligatorio). */
 export function isUmadEmail(email) {
   return typeof email === 'string' && email.trim().toLowerCase().endsWith(UMAD_DOMAIN);
 }
 
+/** Valida cualquier dirección de correo electrónico válida (Gmail, Outlook, UMAD, etc.) */
 export function validateEmail(email) {
   if (!email || !email.trim()) return 'El correo es obligatorio';
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  if (!re.test(email.trim())) return 'Escribe un correo válido (ej. nombre@umad.edu.mx)';
+  if (!re.test(email.trim())) return 'Escribe un correo electrónico válido (ej. tu_correo@ejemplo.com)';
   return null;
 }
 

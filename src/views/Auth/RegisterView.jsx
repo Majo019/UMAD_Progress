@@ -102,6 +102,7 @@ export default function RegisterView() {
       setFormError(null);
       await register({
         email: draft.email.trim(),
+        password: draft.password,
         name: draft.name.trim(),
         career: draft.career,
         semester: Number(draft.semester),
@@ -111,7 +112,7 @@ export default function RegisterView() {
       setDraft(EMPTY_DRAFT);
       navigate('/', { replace: true });
     } catch (err) {
-      setFormError('No pudimos crear tu cuenta. Inténtalo de nuevo en un momento.');
+      setFormError(err.message || 'No pudimos crear tu cuenta. Inténtalo de nuevo en un momento.');
     } finally {
       setSubmitting(false);
     }
@@ -146,15 +147,15 @@ export default function RegisterView() {
       {step === 1 && (
         <form className="stack auth__form-inner" onSubmit={goStep2} noValidate>
           <AuthField
-            label="Correo"
+            label="Correo electrónico"
             type="email"
             autoComplete="email"
-            placeholder="nombre@umad.edu.mx"
+            placeholder="ejemplo@correo.com"
             value={draft.email}
             onChange={set('email')}
             onBlur={() => setTouched((t) => ({ ...t, email: true }))}
             error={step1Errors.email}
-            hint={!step1Errors.email && institutional ? '✓ Correo institucional UMAD' : undefined}
+            hint={!step1Errors.email && institutional ? '✓ Correo institucional UMAD detectado' : undefined}
           />
 
           <div className="auth__password-block">

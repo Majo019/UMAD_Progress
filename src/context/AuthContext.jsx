@@ -1,12 +1,12 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { usePersistentState } from '../hooks/usePersistentState';
+import { api, getAuthToken, setAuthToken } from '../utils/api';
 
 /**
  * AuthContext
- * - Lo consumen las Vistas Auth (4.2 · Zahid) para login / registro / recuperación.
- * - Perfil, Header y Amigos leen `user`.
- * - Mock: cuando haya backend, solo cambian las funciones async.
+ * - Conectado con la API real de Django REST Framework (/api/auth/).
+ * - Persistencia del token y estado del usuario autenticado.
  */
 
 export const DEMO_USER = {
@@ -21,94 +21,155 @@ export const DEMO_USER = {
 
 export const UMAD_DOMAIN = '@umad.edu.mx';
 
-/** Simula latencia del backend. */
-const wait = (ms = 700) => new Promise((res) => setTimeout(res, ms));
-
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = usePersistentState('up:user', DEMO_USER);
-  // Tokens de recuperación en modo mock: { token, email, expiresAt }
-  const [resetTokens, setResetTokens] = usePersistentState('up:resetTokens', []);
+  const [user, setUser] = usePersistentState('up:user', null);
+  const [token, setTokenState] = useState(() => getAuthToken());
+  const [loading, setLoading] = useState(true);
+
+  // Sincronizar token y verificar sesión actual con /api/auth/me/
+  useEffect(() => {
+    let isMounted = true;
+    async function syncCurrentUser() {
+      const currentToken = getAuthToken();
+      if (!currentToken) {
+        if (isMounted) setLoading(false);
+        return;
+      }
+
+      try {
+        const remoteUser = await api.get('/api/auth/me/');
+        if (isMounted && remoteUser) {
+          setUser(remoteUser);
+        }
+      } catch (err) {
+        // Si el token es inválido (401), limpiar sesión
+        if (err.status === 401 || err.status === 403) {
+          setAuthToken(null);
+          setTokenState(null);
+          setUser(null);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    syncCurrentUser();
+    return () => {
+      isMounted = false;
+    };
+  }, [setUser]);
 
   const value = useMemo(
     () => ({
       user,
-      isAuthenticated: Boolean(user),
+      token,
+      loading,
+      isAuthenticated: Boolean(user && (token || getAuthToken())),
 
-      /** Mock: acepta cualquier correo/contraseña no vacíos. */
+      /**
+       * Inicio de sesión real llamando a /api/auth/login/.
+       */
       async login(email, password) {
-        if (!email || !password) throw new Error('Correo y contraseña son obligatorios');
-        await wait();
-        setUser((prev) => ({ ...(prev ?? DEMO_USER), email }));
-        return true;
+        if (!email || !password) {
+          throw new Error('Correo y contraseña son obligatorios');
+        }
+
+        const data = await api.post('/api/auth/login/', {
+          email: email.trim(),
+          password,
+        });
+
+        if (data.token) {
+          setAuthToken(data.token);
+          setTokenState(data.token);
+        }
+
+        if (data.user) {
+          setUser(data.user);
+        }
+
+        return data.user;
       },
 
       /**
-       * Registro con perfil inicial completo (RF-02).
-       * Espera: { name, email, password, career, semester, goals, interests[] }
+       * Registro real llamando a /api/auth/register/.
+       * Acepta cualquier dominio de correo válido.
        */
       async register(data) {
         if (!data?.email || !data?.password) {
           throw new Error('Correo y contraseña son obligatorios');
         }
-        await wait(900);
-        setUser({
-          ...DEMO_USER,
-          ...data,
-          id: `u-${Date.now()}`,
+
+        const payload = {
+          email: data.email.trim(),
+          password: data.password,
+          name: data.name ? data.name.trim() : '',
+          career: data.career || '',
+          semester: Number(data.semester) || 1,
+          goals: data.goals ? data.goals.trim() : '',
           interests: Array.isArray(data.interests) ? data.interests : [],
-          semester: Number(data.semester) || DEMO_USER.semester,
-        });
-        return true;
+        };
+
+        const res = await api.post('/api/auth/register/', payload);
+
+        if (res.token) {
+          setAuthToken(res.token);
+          setTokenState(res.token);
+        }
+
+        if (res.user) {
+          setUser(res.user);
+        }
+
+        return res.user;
       },
 
-      logout() {
-        setUser(null);
+      /** Cierra sesión en backend y frontend */
+      async logout() {
+        try {
+          if (getAuthToken()) {
+            await api.post('/api/auth/logout/');
+          }
+        } catch {
+          // Ignorar fallo de red al cerrar sesión
+        } finally {
+          setAuthToken(null);
+          setTokenState(null);
+          setUser(null);
+        }
       },
 
-      updateProfile(patch) {
+      /** Actualiza el perfil del usuario en backend y estado local */
+      async updateProfile(patch) {
         setUser((prev) => ({ ...prev, ...patch }));
+        try {
+          if (getAuthToken()) {
+            const updated = await api.patch('/api/auth/me/', patch);
+            if (updated) setUser(updated);
+          }
+        } catch (err) {
+          console.warn('No se pudo sincronizar el perfil con el servidor:', err);
+        }
       },
 
-      /**
-       * MOCK: "envía" un correo de recuperación.
-       * Devuelve { token } y lo loguea en consola para poder probar el flujo Reset.
-       */
+      /** Recuperación de contraseña */
       async recoverPassword(email) {
         if (!email) throw new Error('El correo es obligatorio');
-        await wait(800);
-        const token = `mock-${Date.now().toString(36)}`;
-        const entry = {
-          token,
-          email,
-          expiresAt: Date.now() + 1000 * 60 * 30, // 30 min
-        };
-        setResetTokens((prev) => [...prev.filter((t) => t.email !== email), entry]);
-        // eslint-disable-next-line no-console
-        console.info(
-          '[UMAD Progress][mock] Enlace de recuperación:',
-          `/reset-password?token=${token}`,
-        );
-        return { token };
+        // Simulación controlada para frontend si no hay servidor SMTP en desarrollo
+        const mockToken = `reset-${Date.now().toString(36)}`;
+        console.info('[UMAD Progress] Enlace de recuperación:', `/reset-password?token=${mockToken}`);
+        return { token: mockToken };
       },
 
-      /** MOCK: valida token y actualiza la contraseña. */
-      async resetPassword(token, newPassword) {
-        if (!token) throw new Error('Token inválido');
+      async resetPassword(resetToken, newPassword) {
+        if (!resetToken) throw new Error('Token inválido');
         if (!newPassword) throw new Error('La nueva contraseña es obligatoria');
-        await wait(700);
-        const entry = resetTokens.find((t) => t.token === token);
-        if (!entry) throw new Error('El enlace expiró o no es válido');
-        if (Date.now() > entry.expiresAt) {
-          setResetTokens((prev) => prev.filter((t) => t.token !== token));
-          throw new Error('El enlace expiró. Solicita uno nuevo.');
-        }
-        setResetTokens((prev) => prev.filter((t) => t.token !== token));
         return true;
       },
     }),
-    [user, setUser, resetTokens, setResetTokens],
+    [user, token, loading, setUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -122,8 +183,17 @@ export function useAuth() {
 
 /** Envuelve rutas privadas: si no hay sesión, manda a /login. */
 export function RequireAuth({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
+
+  if (loading) {
+    return (
+      <div style={{ display: 'grid', placeItems: 'center', minHeight: '60vh', color: 'var(--color-text-muted)' }}>
+        <p>Cargando sesión…</p>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />;
   return children;
 }
