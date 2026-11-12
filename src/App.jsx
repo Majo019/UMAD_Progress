@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
-import { RequireAuth } from './context';
+import { RequireAdmin, RequireAuth, RequireUser } from './context';
 import PomodoroView from './views/Pomodoro/PomodoroView';
 
 // 4.7 · Pablo Farid Montoro
@@ -19,6 +19,14 @@ import DashboardView from './views/Dashboard/DashboardView';
 
 import TasksHistoryView from './views/TasksHistory/TasksHistoryView';
 
+// Panel de administración (rol admin)
+import AdminLayout from './views/Admin/AdminLayout';
+import AdminDashboardView from './views/Admin/AdminDashboardView';
+import AdminUsersView from './views/Admin/AdminUsersView';
+import AdminUserDetailView from './views/Admin/AdminUserDetailView';
+import AdminTasksView from './views/Admin/AdminTasksView';
+import AdminProfileView from './views/Admin/AdminProfileView';
+
 export default function App() {
   return (
     <Routes>
@@ -28,10 +36,30 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPasswordView />} />
       <Route path="/reset-password" element={<ResetPasswordView />} />
 
+      {/* Panel de administración · solo rol admin */}
+      <Route
+        path="/admin"
+        element={
+          <RequireAdmin>
+            <AdminLayout />
+          </RequireAdmin>
+        }
+      >
+        <Route index element={<AdminDashboardView />} />
+        <Route path="usuarios" element={<AdminUsersView />} />
+        <Route path="usuarios/:id" element={<AdminUserDetailView />} />
+        <Route path="tareas" element={<AdminTasksView />} />
+        <Route path="perfil" element={<AdminProfileView />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Route>
+
+      {/* App del alumno · solo rol user (los admin se redirigen a /admin) */}
       <Route
         element={
           <RequireAuth>
-            <AppLayout />
+            <RequireUser>
+              <AppLayout />
+            </RequireUser>
           </RequireAuth>
         }
       >

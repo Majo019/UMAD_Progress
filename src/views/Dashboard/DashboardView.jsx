@@ -20,7 +20,8 @@ import {
 } from '../../components/ui';
 
 import {
-  TASK_PRIORITIES,
+  TASK_DIFFICULTIES,
+  getTaskDifficulty,
   useAvatar,
   useTasks,
 } from '../../context';
@@ -34,9 +35,8 @@ function TaskItem({
   onEdit,
   onDelete,
 }) {
-  const priority =
-    TASK_PRIORITIES[task.priority] ??
-    TASK_PRIORITIES.media;
+  const difficulty =
+    TASK_DIFFICULTIES[getTaskDifficulty(task)];
 
   const { wheel } = useAvatar();
 
@@ -47,7 +47,7 @@ function TaskItem({
   return (
     <Card
       as="li"
-      accent={priority.color}
+      accent={difficulty.color}
       className="task-card"
     >
       <button
@@ -76,8 +76,8 @@ function TaskItem({
               </Chip>
             )}
 
-            <Chip color={priority.color}>
-              {priority.label}
+            <Chip color={difficulty.color}>
+              {difficulty.label}
             </Chip>
           </div>
         </div>
@@ -134,9 +134,8 @@ export default function DashboardView() {
     );
   }, [pendingTasks]);
 
-  const nextTaskPriority = nextTask
-    ? TASK_PRIORITIES[nextTask.priority] ??
-      TASK_PRIORITIES.media
+  const nextTaskDifficulty = nextTask
+    ? TASK_DIFFICULTIES[getTaskDifficulty(nextTask)]
     : null;
 
   const nextTaskArea = nextTask
@@ -244,8 +243,8 @@ export default function DashboardView() {
                   </Chip>
                 )}
 
-                <Chip color={nextTaskPriority.color}>
-                  {nextTaskPriority.label}
+                <Chip color={nextTaskDifficulty.color}>
+                  {nextTaskDifficulty.label}
                 </Chip>
               </div>
             </div>

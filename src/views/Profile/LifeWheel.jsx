@@ -1,4 +1,5 @@
 import { BarChart3 } from 'lucide-react';
+import { formatWheelValue } from '../../context';
 
 /**
  * Rueda de la Vida — gráfica polar (cada área es un "gajo" cuyo largo = valor 0–10).
@@ -74,7 +75,7 @@ export default function LifeWheel({ areas, selected, onSelect }) {
               className={`life-wheel__sector ${isActive ? 'is-active' : ''} ${selected && !isActive ? 'is-dim' : ''}`}
               tabIndex={0}
               role="button"
-              aria-label={`${area.label}: ${area.value} de 10`}
+              aria-label={`${area.label}: ${formatWheelValue(area.value)} de 10`}
               onClick={() => onSelect?.(isActive ? null : area.key)}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect?.(isActive ? null : area.key)}
             />
@@ -107,7 +108,7 @@ export default function LifeWheel({ areas, selected, onSelect }) {
 
       <div className="life-wheel__center" aria-live="polite">
         {active ? (
-          <span className="life-wheel__score">{active.value}</span>
+          <span className="life-wheel__score">{formatWheelValue(active.value)}</span>
         ) : (
           <BarChart3 size={18} aria-hidden="true" />
         )}
@@ -117,7 +118,7 @@ export default function LifeWheel({ areas, selected, onSelect }) {
       <p className="life-wheel__caption">
         {active ? (
           <>
-            <strong>{active.label}</strong> · {active.value}/10
+            <strong>{active.label}</strong> · {formatWheelValue(active.value)}/10
           </>
         ) : (
           <>

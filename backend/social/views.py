@@ -15,9 +15,12 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from authentication.models import Role
+
 from .models import CalendarEvent, Friendship
 from .serializers import (CalendarEventSerializer, CalendarSyncSerializer,
-                          FriendRequestSerializer, FriendUserSerializer)
+                          FriendRequestSerializer, FriendUserSerializer,
+                          SentFriendRequestSerializer)
 
 User = get_user_model()
 ACCEPTED = Friendship.Status.ACCEPTED
@@ -90,41 +93,100 @@ def _friend_ids(user):
     return {r.to_user_id if r.from_user_id == user.id else r.from_user_id for r in rows}
 
 
+def _students(user):
+    """Usuarios activos que no son administradores (sin incluir al usuario actual)."""
+    return (
+        User.objects.filter(is_active=True)
+        .exclude(id=user.id)
+        .exclude(profile__role=Role.ADMIN)
+        .exclude(is_superuser=True, profile__isnull=True)  # superusuarios sin perfil cuentan como admin
+        .select_related('avatar', 'profile')
+    )
+
+
+def _interest_set(user):
+    profile = getattr(user, 'profile', None)
+    interests = profile.interests if profile and isinstance(profile.interests, list) else []
+    return {str(i).strip().lower() for i in interests}
+
+
+def _is_admin_user(user):
+    profile = getattr(user, 'profile', None)
+    if profile is not None:
+        return profile.role == Role.ADMIN
+    return user.is_superuser
+
+
 @api_view(['GET'])
 def friends_list(request):
-    users = User.objects.filter(id__in=_friend_ids(request.user)).select_related('avatar')
+    users = User.objects.filter(id__in=_friend_ids(request.user)).select_related('avatar', 'profile')
     return Response(FriendUserSerializer(users, many=True).data)
 
 
 @api_view(['GET'])
 def search_users(request):
+    """GET /api/friends/search/?q= — busca por usuario, correo, nombre o carrera e indica la relación."""
     q = request.query_params.get('q', '').strip()
     if len(q) < 2:
         return Response([])
-    friends = _friend_ids(request.user)
-    users = User.objects.filter(username__icontains=q).exclude(id=request.user.id).select_related('avatar')[:20]
+    me = request.user
+    users = (
+        _students(me)
+        .filter(
+            Q(username__icontains=q) | Q(email__icontains=q)
+            | Q(first_name__icontains=q) | Q(last_name__icontains=q)
+            | Q(profile__name__icontains=q) | Q(profile__career__icontains=q)
+        )
+        .distinct()
+        .order_by('username')[:20]
+    )
+
+    friends = _friend_ids(me)
+    sent = dict(Friendship.objects.filter(from_user=me, status=PENDING).values_list('to_user_id', 'id'))
+    received = dict(Friendship.objects.filter(to_user=me, status=PENDING).values_list('from_user_id', 'id'))
+
     data = FriendUserSerializer(users, many=True).data
     for row in data:
-        row['is_friend'] = row['id'] in friends
+        uid = row['id']
+        row['is_friend'] = uid in friends
+        row['request_sent'] = uid in sent
+        row['request_received'] = uid in received
+        row['request_id'] = received.get(uid) or sent.get(uid)
     return Response(data)
 
 
 @api_view(['GET'])
 def recommendations(request):
-    related = Friendship.objects.filter(Q(from_user=request.user) | Q(to_user=request.user))
-    excluded = {request.user.id}
+    """Alumnos sin relación con el usuario, priorizando intereses en común y luego nivel."""
+    me = request.user
+    related = Friendship.objects.filter(Q(from_user=me) | Q(to_user=me))
+    excluded = set()
     for r in related:
         excluded.update([r.from_user_id, r.to_user_id])
-    users = (User.objects.exclude(id__in=excluded).select_related('avatar')
-             .order_by('-avatar__level', 'username')[:10])
-    return Response(FriendUserSerializer(users, many=True).data)
+
+    candidates = list(
+        _students(me).exclude(id__in=excluded).order_by('-avatar__level', 'username')[:100]
+    )
+    mine = _interest_set(me)
+    # sort es estable: el orden por nivel/username se conserva como desempate
+    candidates.sort(key=lambda u: len(mine & _interest_set(u)), reverse=True)
+    return Response(FriendUserSerializer(candidates[:10], many=True).data)
 
 
 @api_view(['POST'])
 def send_request(request):
-    username = str(request.data.get('username', '')).strip()
-    target = User.objects.filter(username__iexact=username).first()
-    if not target:
+    """POST {user_id} o {username}."""
+    user_id = request.data.get('user_id')
+    target = None
+    if user_id not in (None, ''):
+        if str(user_id).isdigit():
+            target = User.objects.filter(pk=int(user_id)).first()
+    else:
+        username = str(request.data.get('username', '')).strip()
+        if username:
+            target = User.objects.filter(username__iexact=username).first()
+
+    if not target or not target.is_active or _is_admin_user(target):
         return Response({'detail': 'Usuario no encontrado.'}, status=404)
     if target == request.user:
         return Response({'detail': 'No puedes agregarte a ti mismo.'}, status=400)
@@ -138,17 +200,27 @@ def send_request(request):
         if existing.from_user_id == target.id:  # él ya te había invitado: se acepta directo
             existing.status = ACCEPTED
             existing.save()
-            return Response({'detail': 'Solicitud aceptada, ahora son amigos.'})
+            return Response({'detail': 'Solicitud aceptada, ahora son amigos.', 'status': ACCEPTED})
         return Response({'detail': 'Ya enviaste una solicitud.'}, status=400)
 
-    Friendship.objects.create(from_user=request.user, to_user=target)
-    return Response({'detail': 'Solicitud enviada.'}, status=201)
+    fr = Friendship.objects.create(from_user=request.user, to_user=target)
+    return Response({'detail': 'Solicitud enviada.', 'status': PENDING, 'id': fr.id}, status=201)
 
 
 @api_view(['GET'])
 def pending_requests(request):
-    qs = Friendship.objects.filter(to_user=request.user, status=PENDING).select_related('from_user__avatar')
+    """Solicitudes recibidas pendientes."""
+    qs = (Friendship.objects.filter(to_user=request.user, status=PENDING)
+          .select_related('from_user__avatar', 'from_user__profile'))
     return Response(FriendRequestSerializer(qs, many=True).data)
+
+
+@api_view(['GET'])
+def sent_requests(request):
+    """Solicitudes enviadas por mí que siguen pendientes."""
+    qs = (Friendship.objects.filter(from_user=request.user, status=PENDING)
+          .select_related('to_user__avatar', 'to_user__profile'))
+    return Response(SentFriendRequestSerializer(qs, many=True).data)
 
 
 @api_view(['POST'])
@@ -164,6 +236,13 @@ def reject_request(request, pk):
     fr = get_object_or_404(Friendship, pk=pk, to_user=request.user, status=PENDING)
     fr.delete()
     return Response({'detail': 'Solicitud rechazada.'})
+
+
+@api_view(['DELETE'])
+def cancel_request(request, pk):
+    fr = get_object_or_404(Friendship, pk=pk, from_user=request.user, status=PENDING)
+    fr.delete()
+    return Response(status=204)
 
 
 @api_view(['DELETE'])

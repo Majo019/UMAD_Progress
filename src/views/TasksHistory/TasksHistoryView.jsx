@@ -13,7 +13,8 @@ import {
 } from '../../components/ui';
 
 import {
-  TASK_PRIORITIES,
+  TASK_DIFFICULTIES,
+  getTaskDifficulty,
   useAvatar,
   useTasks,
 } from '../../context';
@@ -38,14 +39,13 @@ function HistoryItem({
   onReopen,
   onDelete,
 }) {
-  const priority =
-    TASK_PRIORITIES[task.priority] ??
-    TASK_PRIORITIES.media;
+  const difficulty =
+    TASK_DIFFICULTIES[getTaskDifficulty(task)];
 
   return (
     <Card
       as="li"
-      accent={priority.color}
+      accent={difficulty.color}
       className="history-card"
     >
       <div className="history-card__icon">
@@ -65,8 +65,8 @@ function HistoryItem({
               </Chip>
             )}
 
-            <Chip color={priority.color}>
-              {priority.label}
+            <Chip color={difficulty.color}>
+              {difficulty.label}
             </Chip>
           </div>
         </div>

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Button, Field, Modal } from '../../components/ui';
-import { useAvatar } from '../../context';
+import { DIFFICULTY, DIFFICULTY_ORDER, getTaskDifficulty, useAvatar, WHEEL_POINTS_BY_DIFFICULTY } from '../../context';
 
 const EMPTY_FORM = {
   title: '',
   description: '',
   dueDate: '',
-  priority: 'media',
+  difficulty: 'media',
   area: '',
 };
 
@@ -28,7 +28,7 @@ export default function TaskFormModal({
         title: initial.title ?? '',
         description: initial.description ?? '',
         dueDate: initial.dueDate ?? '',
-        priority: initial.priority ?? 'media',
+        difficulty: getTaskDifficulty(initial),
         area: initial.area ?? '',
       });
     } else {
@@ -106,15 +106,17 @@ export default function TaskFormModal({
         />
 
         <Field
-          label="Prioridad"
+          label="Dificultad"
           as="select"
-          name="priority"
-          value={form.priority}
+          name="difficulty"
+          value={form.difficulty}
           onChange={handleChange}
         >
-          <option value="alta">Alta</option>
-          <option value="media">Media</option>
-          <option value="baja">Baja</option>
+          {DIFFICULTY_ORDER.map((key) => (
+            <option key={key} value={key}>
+              {DIFFICULTY[key].label} (+{WHEEL_POINTS_BY_DIFFICULTY[key]} al área)
+            </option>
+          ))}
         </Field>
 
         <Field

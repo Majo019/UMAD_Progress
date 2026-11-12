@@ -24,7 +24,7 @@ function moodFromStats({ vida, alimento, carino }) {
  * - Se usa en ProfileView (size="lg").
  */
 export default function AvatarWidget({ size = 96, animated = true }) {
-  const { level, xp, stats } = useAvatar();
+  const { level, xp, stats, look } = useAvatar();
   const mood = moodFromStats(stats);
 
   // Detección de subida de nivel → overlay celebratorio
@@ -49,7 +49,7 @@ export default function AvatarWidget({ size = 96, animated = true }) {
         aria-label={ariaLabel}
       >
         <div className="avatar-widget__sprite">
-          <AvatarSprite size={size} level={level} mood={mood} />
+          <AvatarSprite size={size} level={level} mood={mood} look={look} />
           <span className="avatar-widget__level" aria-hidden="true">
             Nvl {level}
           </span>

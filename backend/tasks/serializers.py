@@ -13,7 +13,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'description',
-            'priority',
+            'difficulty',
             'area',
             'completed',
             'due_date',
@@ -22,8 +22,9 @@ class TaskSerializer(serializers.ModelSerializer):
             'completedAt',
             'created_at',
             'createdAt',
+            'wheel_points',
         ]
-        read_only_fields = ['id', 'created_at', 'createdAt']
+        read_only_fields = ['id', 'created_at', 'createdAt', 'wheel_points']
 
     def to_internal_value(self, data):
         data = data.copy() if hasattr(data, 'copy') else dict(data)

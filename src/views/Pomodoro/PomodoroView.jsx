@@ -316,7 +316,7 @@ export default function PomodoroView() {
       </div>
 
       <Card
-        className="pomodoro__timer-card"
+        className={`pomodoro__timer-card${phase === 'break' ? ' pomodoro__timer-card--break' : ''}`}
         accent={
           phase === 'focus'
             ? 'coral'

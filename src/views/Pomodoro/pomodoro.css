@@ -39,12 +39,99 @@
   width: 100%;
 }
 
+.pomodoro__subtitle {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--fs-sm);
+}
+
+/* ---------- Fases ---------- */
+.pomodoro__phases {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.pomodoro__phases .btn {
+  width: 100%;
+}
+
+/* ---------- Cronómetro ---------- */
+.pomodoro__timer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+}
+
+.pomodoro__timer-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: var(--color-coral);
+}
+
+.pomodoro__timer-card--break .pomodoro__timer-icon {
+  color: var(--color-blue);
+}
+
+.pomodoro__time {
+  margin: var(--space-2) 0;
+  font-family: var(--font-mono);
+  font-size: clamp(3rem, 14vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pomodoro__timer-card > :not(.pomodoro__timer-icon):not(.chip):not(.pomodoro__time) {
+  width: 100%;
+}
+
+.pomodoro__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.pomodoro__actions .btn {
+  width: 100%;
+}
+
+/* ---------- Resumen ---------- */
+.pomodoro__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pomodoro__session-count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xl);
+  line-height: 1.1;
+}
+
+.pomodoro__summary .text-muted {
+  font-size: var(--fs-sm);
+}
+
 @media (max-width: 430px) {
   .pomodoro__settings-grid {
     grid-template-columns: 1fr;
   }
 
   .pomodoro__presets {
+    grid-template-columns: 1fr;
+  }
+
+  .pomodoro__actions {
     grid-template-columns: 1fr;
   }
 }

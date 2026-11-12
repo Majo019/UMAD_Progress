@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Button, Field, Modal } from '../../components/ui';
-import { DIFFICULTY, DIFFICULTY_ORDER, EVENT_TYPES, getDifficulty } from '../../context';
+import { DIFFICULTY, DIFFICULTY_ORDER, EVENT_TYPES, getDifficulty, WHEEL_AREAS, WHEEL_POINTS_BY_DIFFICULTY } from '../../context';
 
-const EMPTY = { title: '', date: '', time: '09:00', detail: '', type: 'entrega', difficulty: 'media' };
+const EMPTY = { title: '', date: '', time: '09:00', detail: '', type: 'entrega', difficulty: 'media', area: '' };
 
 /** Modal para crear / editar una tarea. */
 export default function TaskFormModal({ open, onClose, onSubmit, initial, defaultDate }) {
@@ -16,7 +16,7 @@ export default function TaskFormModal({ open, onClose, onSubmit, initial, defaul
 
   const submit = (e) => {
     e.preventDefault();
-    if (!form.title.trim()) return;
+    if (!form.title.trim() || !form.area) return;
     onSubmit({ ...form, title: form.title.trim(), detail: form.detail.trim() });
     onClose();
   };
@@ -54,10 +54,20 @@ export default function TaskFormModal({ open, onClose, onSubmit, initial, defaul
                 />
                 <span className={`task-dot task-dot--${DIFFICULTY[k].color}`} aria-hidden="true" />
                 {DIFFICULTY[k].label}
+                <span className="diff-picker__points">+{WHEEL_POINTS_BY_DIFFICULTY[k]}</span>
               </label>
             ))}
           </div>
         </fieldset>
+
+        <Field label="Área de la rueda" as="select" value={form.area} onChange={set('area')} required>
+          <option value="">Selecciona un área</option>
+          {WHEEL_AREAS.map((a) => (
+            <option key={a.key} value={a.key}>
+              {a.label}
+            </option>
+          ))}
+        </Field>
 
         <div className="form-grid form-grid--2">
           <Field label="Fecha" type="date" value={form.date} onChange={set('date')} required />

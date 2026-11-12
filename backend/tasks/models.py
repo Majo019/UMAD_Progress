@@ -3,10 +3,10 @@ from django.db import models
 
 
 class Task(models.Model):
-    PRIORITY_CHOICES = [
-        ('alta', 'Alta'),
+    DIFFICULTY_CHOICES = [
+        ('tranquila', 'Tranquila'),
         ('media', 'Media'),
-        ('baja', 'Baja'),
+        ('dificil', 'Difícil'),
     ]
 
     user = models.ForeignKey(
@@ -17,10 +17,12 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, default='')
     due_date = models.CharField(max_length=50, blank=True, default='')
-    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='media')
+    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default='media')
     area = models.CharField(max_length=50, blank=True, default='trabajo')
     completed = models.BooleanField(default=False)
     completed_at = models.DateTimeField(null=True, blank=True)
+    # Puntos que esta tarea ya sumó a la rueda (solo se otorgan la primera vez que se completa)
+    wheel_points = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -2,20 +2,20 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
-  ClipboardCheck,
   History,
   Info,
   LogOut,
   Moon,
+  Palette,
   PieChart,
   Pencil,
   RotateCcw,
   Settings,
-  SlidersHorizontal,
   Sun,
 } from 'lucide-react';
 import { Button, Card, Field, IconButton, Modal } from '../../components/ui';
 import AvatarWidget from '../../components/avatar/AvatarWidget';
+import AvatarCustomizer from '../../components/avatar/AvatarCustomizer';
 import { useAuth, useAvatar, useCalendar, useTheme } from '../../context';
 import { clearPersistedState } from '../../hooks/usePersistentState';
 import LifeWheel from './LifeWheel';
@@ -103,7 +103,7 @@ function SettingsModal({ open, onClose }) {
           }}
         >
           <RotateCcw size={18} />
-          <span>Restablecer datos de ejemplo</span>
+          <span>Restablecer mis datos</span>
         </button>
         <button
           type="button"
@@ -123,14 +123,13 @@ function SettingsModal({ open, onClose }) {
 
 export default function ProfileView() {
   const { user } = useAuth();
-  const { wheel, setWheelValue, openWheelQuiz } = useAvatar();
+  const { wheel } = useAvatar();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [selectedArea, setSelectedArea] = useState(null);
-  const [editingWheel, setEditingWheel] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
-  const [modal, setModal] = useState(null); // 'profile' | 'settings'
+  const [modal, setModal] = useState(null); // 'profile' | 'settings' | 'avatar'
 
   // El engrane del header abre Configuración directamente
   useEffect(() => {
@@ -145,6 +144,9 @@ export default function ProfileView() {
       {/* Avatar + estado — Widget 4.5 */}
       <Card className="avatar-card">
         <AvatarWidget size={88} />
+        <Button variant="secondary" size="sm" icon={Palette} onClick={() => setModal('avatar')}>
+          Personalizar avatar
+        </Button>
       </Card>
 
       {user && (
@@ -164,18 +166,6 @@ export default function ProfileView() {
           </h2>
           <div className="wheel-card__actions">
             <IconButton
-              icon={ClipboardCheck}
-              label="Responder cuestionario de la Rueda de la Vida"
-              className="icon-btn--sm"
-              onClick={openWheelQuiz}
-            />
-            <IconButton
-              icon={SlidersHorizontal}
-              label={editingWheel ? 'Terminar edición' : 'Calificar áreas'}
-              className={`icon-btn--sm ${editingWheel ? 'is-toggled' : ''}`}
-              onClick={() => setEditingWheel((v) => !v)}
-            />
-            <IconButton
               icon={Info}
               label="¿Qué es la Rueda de la Vida?"
               className={`icon-btn--sm ${showInfo ? 'is-toggled' : ''}`}
@@ -186,31 +176,13 @@ export default function ProfileView() {
 
         {showInfo && (
           <p className="wheel-card__info">
-            Califica del 0 al 10 qué tan satisfecho estás con cada área de tu vida. Entre más equilibrada se vea la rueda, más
-            balanceada está tu rutina. Los check-ins de hábitos la van haciendo crecer.
+            Tu rueda parte de las respuestas de tu cuestionario inicial (0 a 10 por área). Cada día todas las áreas bajan 0.2,
+            y al completar una tarea su área sube según la dificultad: tranquila +0.2, media +0.5 y difícil +1.
           </p>
         )}
 
         <LifeWheel areas={wheel} selected={selectedArea} onSelect={setSelectedArea} />
 
-        {editingWheel && (
-          <div className="wheel-sliders">
-            {wheel.map((area) => (
-              <label key={area.key} className="wheel-slider">
-                <span>{area.label}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={10}
-                  value={area.value}
-                  onChange={(e) => setWheelValue(area.key, Number(e.target.value))}
-                  onFocus={() => setSelectedArea(area.key)}
-                />
-                <span className="wheel-slider__value">{area.value}</span>
-              </label>
-            ))}
-          </div>
-        )}
       </Card>
 
       {/* Menú */}
@@ -238,6 +210,7 @@ export default function ProfileView() {
         </button>
       </Card>
 
+      {modal === 'avatar' && <AvatarCustomizer open onClose={() => setModal(null)} />}
       {modal === 'profile' && <EditProfileModal open onClose={() => setModal(null)} />}
       {modal === 'settings' && <SettingsModal open onClose={() => setModal(null)} />}
     </section>

@@ -41,7 +41,7 @@ const EMPTY_DRAFT = {
 
 export default function RegisterView() {
   const { register } = useAuth();
-  const { resetAvatar, openWheelQuiz } = useAvatar();
+  const { resetAvatar } = useAvatar();
   const navigate = useNavigate();
 
   const [draft, setDraft] = usePersistentState('up:registerDraft', EMPTY_DRAFT);
@@ -111,7 +111,6 @@ export default function RegisterView() {
         interests: draft.interests,
       });
       resetAvatar();
-      openWheelQuiz();
       setDraft(EMPTY_DRAFT);
       navigate('/', { replace: true });
     } catch (err) {

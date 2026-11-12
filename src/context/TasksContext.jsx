@@ -2,13 +2,19 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useAvatar } from './AvatarContext';
 import { useAuth } from './AuthContext';
+import { DIFFICULTY } from './CalendarContext';
 import { api, getAuthToken } from '../utils/api';
 
-export const TASK_PRIORITIES = {
-  alta: { label: 'Alta', color: 'coral' },
-  media: { label: 'Media', color: 'amber' },
-  baja: { label: 'Baja', color: 'green' },
-};
+/** Las tareas usan la misma dificultad que el calendario: tranquila / media / difícil. */
+export const TASK_DIFFICULTIES = DIFFICULTY;
+
+// Tareas guardadas antes del cambio de prioridad (alta/media/baja) a dificultad
+const LEGACY_PRIORITY_TO_DIFFICULTY = { alta: 'dificil', media: 'media', baja: 'tranquila' };
+
+export function getTaskDifficulty(task) {
+  if (DIFFICULTY[task?.difficulty]) return task.difficulty;
+  return LEGACY_PRIORITY_TO_DIFFICULTY[task?.priority] ?? 'media';
+}
 
 const TASK_REWARD = {
   vida: 5,
@@ -16,55 +22,32 @@ const TASK_REWARD = {
   xp: 10,
 };
 
-const TASK_AREA_POINTS = 1;
+/**
+ * Las tareas de ejemplo (t1, t2, t3) ya no se generan. Esta lista sirve para
+ * limpiar a quienes las tenían guardadas en el navegador de versiones anteriores.
+ */
+const LEGACY_SEED_TASKS = {
+  t1: 'Terminar avance del proyecto',
+  t2: 'Repasar Base de Datos',
+  t3: 'Revisar calendario',
+};
 
-function seedTasks() {
-  const now = new Date().toISOString();
-
-  return [
-    {
-      id: 't1',
-      title: 'Terminar avance del proyecto',
-      description: 'Completar la parte pendiente del frontend',
-      dueDate: '',
-      priority: 'alta',
-      area: 'trabajo',
-      completed: false,
-      completedAt: null,
-      createdAt: now,
-    },
-    {
-      id: 't2',
-      title: 'Repasar Base de Datos',
-      description: 'Revisar consultas y ejercicios vistos en clase',
-      dueDate: '',
-      priority: 'media',
-      area: 'trabajo',
-      completed: false,
-      completedAt: null,
-      createdAt: now,
-    },
-    {
-      id: 't3',
-      title: 'Revisar calendario',
-      description: 'Ver próximas entregas de la semana',
-      dueDate: '',
-      priority: 'baja',
-      area: 'retrospeccion',
-      completed: true,
-      completedAt: now,
-      createdAt: now,
-    },
-  ];
-}
+const isLegacySeedTask = (task) => LEGACY_SEED_TASKS[task?.id] === task?.title;
 
 const TasksContext = createContext(null);
 
 export function TasksProvider({ children }) {
-  const [tasks, setTasks] = usePersistentState('up:tasks', seedTasks);
+  const [tasks, setTasks] = usePersistentState('up:tasks', []);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
-  const { applyReward, boostArea } = useAvatar();
+  const { user, refreshUser } = useAuth();
+  const { applyReward } = useAvatar();
+
+  // Borra las tareas de ejemplo que hayan quedado guardadas en este navegador
+  useEffect(() => {
+    if (tasks.some(isLegacySeedTask)) {
+      setTasks((prev) => prev.filter((task) => !isLegacySeedTask(task)));
+    }
+  }, [tasks, setTasks]);
 
   // Sincronizar tareas con el backend Django (/api/tasks/)
   const refreshTasks = useCallback(async () => {
@@ -109,7 +92,7 @@ export function TasksProvider({ children }) {
             title: taskData.title,
             description: taskData.description || '',
             dueDate: taskData.dueDate || '',
-            priority: taskData.priority || 'media',
+            difficulty: getTaskDifficulty(taskData),
             area: taskData.area || 'trabajo',
             completed: false,
           });
@@ -194,22 +177,23 @@ export function TasksProvider({ children }) {
 
       applyReward(TASK_REWARD);
 
-      if (task.area) {
-        boostArea(task.area, TASK_AREA_POINTS);
-      }
-
+      // El servidor suma los puntos a la rueda según la dificultad (una sola vez por tarea)
       if (getAuthToken()) {
         try {
           const isNumeric = !String(id).startsWith('t');
           if (isNumeric) {
-            await api.post(`/api/tasks/${id}/complete/`);
+            const updated = await api.post(`/api/tasks/${id}/complete/`);
+            if (updated?.id) {
+              setTasks((prev) => prev.map((item) => (String(item.id) === String(id) ? updated : item)));
+            }
+            refreshUser?.();
           }
         } catch (err) {
           console.error('Error al marcar tarea completada en backend:', err);
         }
       }
     },
-    [tasks, setTasks, applyReward, boostArea],
+    [tasks, setTasks, applyReward, refreshUser],
   );
 
   const reopenTask = useCallback(
@@ -285,7 +269,7 @@ export function TasksProvider({ children }) {
       reopenTask,
       refreshTasks,
 
-      resetTasks: () => setTasks(seedTasks()),
+      resetTasks: () => setTasks([]),
     }),
     [
       tasks,

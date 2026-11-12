@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { CalendarCheck, ChevronLeft, ChevronRight, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CalendarCheck, Check, ChevronLeft, Circle, ChevronRight, MoreVertical, Pencil, PlayCircle, Plus, Trash2, X } from 'lucide-react';
 import { Button, Card, Chip, EmptyState, IconButton, SegmentedControl } from '../../components/ui';
-import { DIFFICULTY, DIFFICULTY_ORDER, EVENT_TYPES, getDifficulty, useCalendar } from '../../context';
+import {
+  DIFFICULTY,
+  DIFFICULTY_ORDER,
+  EVENT_TYPES,
+  getDifficulty,
+  useCalendar,
+  WHEEL_AREAS,
+  WHEEL_POINTS_BY_DIFFICULTY,
+} from '../../context';
 import {
   WEEKDAYS,
   WEEKDAYS_ABBR,
@@ -36,11 +44,13 @@ function DifficultyDots({ events }) {
   );
 }
 
-function TaskItem({ event, showDate, onEdit, onDelete }) {
+function TaskItem({ event, showDate, onEdit, onDelete, onToggle }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const ref = useRef(null);
   const diff = DIFFICULTY[getDifficulty(event)];
   const type = EVENT_TYPES[event.type];
+  const area = WHEEL_AREAS.find((a) => a.key === event.area);
+  const difficultyKey = getDifficulty(event);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -50,7 +60,23 @@ function TaskItem({ event, showDate, onEdit, onDelete }) {
   }, [menuOpen]);
 
   return (
-    <Card as="li" accent={diff.color} className="task">
+    <Card as="li" accent={diff.color} className={`task ${event.completed ? 'is-done' : ''}`}>
+      <button
+        type="button"
+        className={`task__check ${event.completed ? 'is-checked' : ''}`}
+        onClick={() => onToggle(event)}
+        aria-pressed={Boolean(event.completed)}
+        aria-label={event.completed ? `Marcar ${event.title} como pendiente` : `Completar ${event.title}`}
+        title={
+          event.completed
+            ? 'Marcar como pendiente'
+            : area
+              ? `Completar (+${WHEEL_POINTS_BY_DIFFICULTY[difficultyKey]} a ${area.label})`
+              : 'Completar'
+        }
+      >
+        {event.completed ? <Check size={16} /> : <Circle size={16} />}
+      </button>
       <div className="task__body">
         <p className="task__title">{event.title}</p>
         <p className="task__meta">
@@ -60,6 +86,7 @@ function TaskItem({ event, showDate, onEdit, onDelete }) {
         </p>
         <div className="task__chips">
           <Chip color={diff.color}>{diff.label}</Chip>
+          {area && <Chip color="blue">{area.label}</Chip>}
           {type && <Chip>{type.label}</Chip>}
         </div>
       </div>
@@ -97,9 +124,9 @@ function TaskItem({ event, showDate, onEdit, onDelete }) {
 
 /* ---------- Vista: clasificación por dificultad ---------- */
 
-function DifficultyBoard({ events, onEdit, onDelete }) {
+function DifficultyBoard({ events, onEdit, onDelete, onToggle }) {
   const today = todayISO();
-  const upcoming = events.filter((e) => e.date >= today).sort(byDateTime);
+  const upcoming = events.filter((e) => e.date >= today && !e.completed).sort(byDateTime);
   const groups = Object.fromEntries(DIFFICULTY_ORDER.map((k) => [k, []]));
   upcoming.forEach((e) => groups[getDifficulty(e)].push(e));
   const total = upcoming.length;
@@ -157,7 +184,7 @@ function DifficultyBoard({ events, onEdit, onDelete }) {
             {groups[k].length ? (
               <ul className="task-list">
                 {groups[k].map((ev) => (
-                  <TaskItem key={ev.id} event={ev} showDate onEdit={onEdit} onDelete={onDelete} />
+                  <TaskItem key={ev.id} event={ev} showDate onEdit={onEdit} onDelete={onDelete} onToggle={onToggle} />
                 ))}
               </ul>
             ) : (
@@ -172,7 +199,7 @@ function DifficultyBoard({ events, onEdit, onDelete }) {
 
 /* ---------- Vista: semanal con tareas por día ---------- */
 
-function WeekBoard({ eventsByDate, selected, onSelectDay, onShiftWeek, onEdit, onDelete }) {
+function WeekBoard({ eventsByDate, selected, onSelectDay, onShiftWeek, onEdit, onDelete, onToggle }) {
   const today = todayISO();
   const selectedDate = fromISODate(selected);
   const days = getWeekDays(selectedDate);
@@ -244,7 +271,7 @@ function WeekBoard({ eventsByDate, selected, onSelectDay, onShiftWeek, onEdit, o
               {events.length ? (
                 <ul className="task-list">
                   {events.map((ev) => (
-                    <TaskItem key={ev.id} event={ev} onEdit={onEdit} onDelete={onDelete} />
+                    <TaskItem key={ev.id} event={ev} onEdit={onEdit} onDelete={onDelete} onToggle={onToggle} />
                   ))}
                 </ul>
               ) : (
@@ -264,10 +291,51 @@ function WeekBoard({ eventsByDate, selected, onSelectDay, onShiftWeek, onEdit, o
   );
 }
 
+/* ---------- Video explicativo ---------- */
+
+const TASKS_VIDEO_SRC = `${import.meta.env.BASE_URL}videos/explicacion-tareas.mp4`;
+
+function TasksVideoCard() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Card className="tasks-video">
+      <div className="row-between">
+        <div className="tasks-video__text">
+          <h2 className="section-title">¿Cómo funcionan las tareas?</h2>
+          <p className="tasks-video__hint">Mira el video para aprender a usar esta pantalla.</p>
+        </div>
+        <Button
+          variant={open ? 'secondary' : 'blue'}
+          size="sm"
+          icon={open ? X : PlayCircle}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? 'Cerrar' : 'Ver video'}
+        </Button>
+      </div>
+      {open && (
+        <video
+          className="tasks-video__player"
+          src={TASKS_VIDEO_SRC}
+          controls
+          autoPlay
+          playsInline
+          preload="metadata"
+          controlsList="nodownload"
+        >
+          Tu navegador no puede reproducir este video.
+        </video>
+      )}
+    </Card>
+  );
+}
+
 /* ---------- Pantalla ---------- */
 
 export default function TasksView() {
-  const { events, eventsByDate, addEvent, updateEvent, removeEvent } = useCalendar();
+  const { events, eventsByDate, addEvent, updateEvent, removeEvent, completeEvent, reopenEvent } = useCalendar();
   const [view, setView] = useState('dificultad');
   const [selected, setSelected] = useState(todayISO);
   const [modal, setModal] = useState(null); // null | { initial?: event }
@@ -282,15 +350,18 @@ export default function TasksView() {
   };
 
   const openEdit = (e) => setModal({ initial: e });
+  const toggleDone = (e) => (e.completed ? reopenEvent(e.id) : completeEvent(e.id));
 
   return (
     <section className="view tasks">
       <h1 className="page-title">Tareas</h1>
 
+      <TasksVideoCard />
+
       <SegmentedControl options={VIEW_OPTIONS} value={view} onChange={setView} label="Tipo de vista" />
 
       {view === 'dificultad' ? (
-        <DifficultyBoard events={events} onEdit={openEdit} onDelete={removeEvent} />
+        <DifficultyBoard events={events} onEdit={openEdit} onDelete={removeEvent} onToggle={toggleDone} />
       ) : (
         <WeekBoard
           eventsByDate={eventsByDate}
@@ -299,6 +370,7 @@ export default function TasksView() {
           onShiftWeek={shiftWeek}
           onEdit={openEdit}
           onDelete={removeEvent}
+          onToggle={toggleDone}
         />
       )}
 

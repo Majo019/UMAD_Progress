@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'pomodoro',
     'gamification',
     'social',
+    'administration',
 ]
 
 

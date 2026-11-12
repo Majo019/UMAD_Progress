@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import update_last_login
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -7,6 +8,7 @@ from rest_framework.authtoken.models import Token
 from gamification.services import get_profile
 
 from .models import UserProfile
+from .wheel import DIFFICULTY_POINTS, WHEEL_KEYS, add_points, apply_decay, set_initial_wheel
 from .serializers import RegisterSerializer, LoginSerializer, UserDetailSerializer
 
 User = get_user_model()
@@ -98,16 +100,18 @@ def login_view(request):
         return Response({'detail': 'Esta cuenta está desactivada.'}, status=status.HTTP_403_FORBIDDEN)
 
     # Garantizar que el perfil y el avatar existen
-    UserProfile.objects.get_or_create(
+    profile, _ = UserProfile.objects.get_or_create(
         user=user,
         defaults={'name': user.get_full_name() or user.username}
     )
+    apply_decay(profile)
     try:
         get_profile(user)
     except Exception:
         pass
 
     token, _ = Token.objects.get_or_create(user=user)
+    update_last_login(None, user)
 
     return Response({
         'token': token.key,
@@ -129,6 +133,7 @@ def me_view(request):
         get_profile(user)
     except Exception:
         pass
+    apply_decay(profile)
 
     if request.method in ('PATCH', 'PUT'):
         data = request.data
@@ -149,10 +154,16 @@ def me_view(request):
             profile.goals = str(data['goals'])
         if 'interests' in data and isinstance(data['interests'], list):
             profile.interests = data['interests']
-        if 'wheel' in data and isinstance(data['wheel'], list):
-            profile.wheel = data['wheel']
-        if 'wheel_quiz_completed' in data:
-            profile.wheel_quiz_completed = bool(data['wheel_quiz_completed'])
+        # La rueda solo se puede fijar una vez, al responder el cuestionario inicial.
+        # Después cambia únicamente con tareas completadas y la baja diaria.
+        if 'wheel' in data and isinstance(data['wheel'], list) and data.get('wheel_quiz_completed'):
+            set_initial_wheel(profile, data['wheel'])
+        if 'avatar_look' in data and isinstance(data['avatar_look'], dict):
+            # Solo se guardan claves conocidas del personalizador, con valores cortos tipo texto
+            allowed = ('skin', 'hair', 'hairStyle', 'outfit', 'accent')
+            profile.avatar_look = {
+                k: str(v)[:20] for k, v in data['avatar_look'].items() if k in allowed
+            }
 
         profile.save()
 
@@ -169,3 +180,23 @@ def logout_view(request):
     Token.objects.filter(user=request.user).delete()
     return Response({'detail': 'Sesión cerrada exitosamente.'})
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def wheel_award_view(request):
+    """
+    POST /api/auth/me/wheel/award/  { area, difficulty }
+    Suma puntos a un área de la rueda al completar una tarea del calendario
+    (tranquila +0.2, media +0.5, dificil +1).
+    """
+    area = request.data.get('area')
+    difficulty = request.data.get('difficulty')
+    if area not in WHEEL_KEYS:
+        return Response({'detail': 'Área no válida.'}, status=status.HTTP_400_BAD_REQUEST)
+    if difficulty not in DIFFICULTY_POINTS:
+        return Response({'detail': 'Dificultad no válida.'}, status=status.HTTP_400_BAD_REQUEST)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if not profile.wheel_quiz_completed:
+        return Response({'detail': 'Primero responde el cuestionario de la rueda.'}, status=status.HTTP_400_BAD_REQUEST)
+    add_points(profile, area, difficulty)
+    return Response(UserDetailSerializer(request.user).data)

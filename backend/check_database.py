@@ -97,7 +97,7 @@ def verify_database():
     task = Task.objects.create(
         user=user,
         title="Validar base de datos",
-        priority="alta",
+        difficulty="dificil",
         area="trabajo",
     )
 

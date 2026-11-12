@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useAuth } from './AuthContext';
+import { DEFAULT_LOOK, normalizeLook } from '../components/avatar/sprites';
+import { api, getAuthToken } from '../utils/api';
 
 /**
  * AvatarContext
@@ -28,7 +30,7 @@ const INITIAL_AVATAR = {
 };
 
 // Orden en sentido horario empezando arriba (como en el mockup)
-const INITIAL_WHEEL = [
+export const WHEEL_AREAS = [
   { key: 'amigos', label: 'Amigos', value: 5 },
   { key: 'trabajo', label: 'Trabajo', value: 5 },
   { key: 'familia', label: 'Familia', value: 5 },
@@ -39,15 +41,30 @@ const INITIAL_WHEEL = [
   { key: 'alimentacion', label: 'Alimentación', value: 5 },
 ];
 
+const INITIAL_WHEEL = WHEEL_AREAS;
+
+/**
+ * Reglas de la rueda (las aplica el servidor, ver backend/authentication/wheel.py):
+ * - El cuestionario inicial se responde una sola vez.
+ * - Cada día todas las áreas bajan 0.2.
+ * - Completar una tarea suma puntos al área elegida según su dificultad.
+ */
+export const WHEEL_DAILY_DECAY = 0.2;
+export const WHEEL_POINTS_BY_DIFFICULTY = { tranquila: 0.2, media: 0.5, dificil: 1 };
+
+/** Muestra un valor de la rueda con máximo un decimal (7, 6.8, ...). */
+export const formatWheelValue = (value) => String(Math.round((Number(value) || 0) * 10) / 10);
+
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+const round1 = (n) => Math.round(n * 10) / 10;
 
 const AvatarContext = createContext(null);
 
 export function AvatarProvider({ children }) {
-  const { user, isAuthenticated, updateProfile } = useAuth();
+  const { user, isAuthenticated, updateProfile, setServerUser } = useAuth();
   const [avatar, setAvatar] = usePersistentState('up:avatar', INITIAL_AVATAR);
   const [wheel, setWheel] = usePersistentState('up:wheel', INITIAL_WHEEL);
-  const [quizOpen, setQuizOpen] = usePersistentState('up:wheelQuizPending', false);
+  const [look, setLookState] = usePersistentState('up:avatarLook', DEFAULT_LOOK);
 
   // Migración: quien tenía el nivel 14 por defecto pasa a nivel 1
   useEffect(() => {
@@ -65,25 +82,43 @@ export function AvatarProvider({ children }) {
     }
   }, [wheel, setWheel]);
 
-  // Si el usuario recién creó su cuenta (wheel_quiz_completed === false), abrir el cuestionario emergente
+  // Al crear la cuenta se reinicia el nivel si quedó el valor por defecto antiguo
   useEffect(() => {
     if (isAuthenticated && user && user.wheel_quiz_completed === false) {
-      setQuizOpen(true);
       setAvatar((prev) => (prev.level === 14 ? { ...prev, level: 1, xp: 0 } : prev));
     }
-  }, [isAuthenticated, user, setQuizOpen, setAvatar]);
+  }, [isAuthenticated, user, setAvatar]);
 
-  // Sincronizar rueda guardada en el perfil del usuario si existe
+  // La rueda del servidor manda (ya trae aplicada la baja diaria y los puntos de tareas)
   useEffect(() => {
     if (Array.isArray(user?.wheel) && user.wheel.length === INITIAL_WHEEL.length) {
       setWheel(
         INITIAL_WHEEL.map((base) => {
           const found = user.wheel.find((item) => item.key === base.key);
-          return found ? { ...base, value: clamp(Number(found.value) || 0, 0, 10) } : base;
+          return found ? { ...base, value: clamp(round1(Number(found.value) || 0), 0, 10) } : base;
         }),
       );
     }
+  }, [user?.wheel]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Si la persona ya personalizó su avatar en otro dispositivo, se carga al iniciar sesión
+  useEffect(() => {
+    if (user?.avatar_look && typeof user.avatar_look === 'object' && Object.keys(user.avatar_look).length) {
+      setLookState(normalizeLook(user.avatar_look));
+    }
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Guarda la apariencia del avatar (local + perfil en el servidor). */
+  const setLook = useCallback(
+    (nextLook) => {
+      const clean = normalizeLook(nextLook);
+      setLookState(clean);
+      if (isAuthenticated) {
+        updateProfile?.({ avatar_look: clean });
+      }
+    },
+    [setLookState, isAuthenticated, updateProfile],
+  );
 
   /** reward: { vida?, alimento?, carino?, xp? } — acepta negativos. */
   const applyReward = useCallback(
@@ -106,42 +141,31 @@ export function AvatarProvider({ children }) {
     [setAvatar],
   );
 
-  const setWheelValue = useCallback(
-    (key, value) => {
-      setWheel((prev) => {
-        const next = prev.map((a) => (a.key === key ? { ...a, value: clamp(value, 0, 10) } : a));
-        if (isAuthenticated) {
-          updateProfile?.({ wheel: next });
+  /**
+   * Suma puntos a un área al completar una tarea (tranquila +0.2, media +0.5, difícil +1).
+   * Se usa para las tareas del calendario; las del Dashboard las premia el servidor al completarlas.
+   */
+  const awardArea = useCallback(
+    async (key, difficulty) => {
+      const points = WHEEL_POINTS_BY_DIFFICULTY[difficulty];
+      if (!points || !INITIAL_WHEEL.some((a) => a.key === key)) return 0;
+      setWheel((prev) => prev.map((a) => (a.key === key ? { ...a, value: clamp(round1(a.value + points), 0, 10) } : a)));
+      if (isAuthenticated && getAuthToken()) {
+        try {
+          const updated = await api.post('/api/auth/me/wheel/award/', { area: key, difficulty });
+          setServerUser?.(updated);
+        } catch (err) {
+          console.warn('No se pudieron guardar los puntos de la rueda:', err);
         }
-        return next;
-      });
+      }
+      return points;
     },
-    [setWheel, isAuthenticated, updateProfile],
+    [setWheel, isAuthenticated, setServerUser],
   );
 
-  const boostArea = useCallback(
-    (key, amount = 1) => {
-      setWheel((prev) => {
-        const next = prev.map((a) => (a.key === key ? { ...a, value: clamp(a.value + amount, 0, 10) } : a));
-        if (isAuthenticated) {
-          updateProfile?.({ wheel: next });
-        }
-        return next;
-      });
-    },
-    [setWheel, isAuthenticated, updateProfile],
-  );
-
-  const openWheelQuiz = useCallback(() => {
-    setQuizOpen(true);
-  }, [setQuizOpen]);
-
-  const closeWheelQuiz = useCallback(() => {
-    setQuizOpen(false);
-    if (isAuthenticated && user?.wheel_quiz_completed === false) {
-      updateProfile?.({ wheel_quiz_completed: true });
-    }
-  }, [setQuizOpen, isAuthenticated, user?.wheel_quiz_completed, updateProfile]);
+  // El cuestionario solo aparece mientras no se haya respondido; después queda bloqueado
+  const quizMandatory = Boolean(isAuthenticated && user && user.wheel_quiz_completed === false);
+  const quizOpen = quizMandatory;
 
   const completeWheelQuiz = useCallback(
     (scoresByKey = {}) => {
@@ -150,7 +174,6 @@ export function AvatarProvider({ children }) {
         value: clamp(Number(scoresByKey[area.key] ?? area.value), 0, 10),
       }));
       setWheel(nextWheel);
-      setQuizOpen(false);
       if (isAuthenticated) {
         updateProfile?.({
           wheel: nextWheel,
@@ -158,19 +181,19 @@ export function AvatarProvider({ children }) {
         });
       }
     },
-    [setWheel, setQuizOpen, isAuthenticated, updateProfile],
+    [setWheel, isAuthenticated, updateProfile],
   );
 
   const value = useMemo(
     () => ({
       ...avatar,
+      look: normalizeLook(look),
+      setLook,
       wheel,
       quizOpen,
+      quizMandatory,
       applyReward,
-      setWheelValue,
-      boostArea,
-      openWheelQuiz,
-      closeWheelQuiz,
+      awardArea,
       completeWheelQuiz,
       resetAvatar: () => {
         setAvatar(INITIAL_AVATAR);
@@ -179,13 +202,13 @@ export function AvatarProvider({ children }) {
     }),
     [
       avatar,
+      look,
+      setLook,
       wheel,
       quizOpen,
+      quizMandatory,
       applyReward,
-      setWheelValue,
-      boostArea,
-      openWheelQuiz,
-      closeWheelQuiz,
+      awardArea,
       completeWheelQuiz,
       setAvatar,
       setWheel,

@@ -4,9 +4,26 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from gamification.services import apply_reward
+from authentication.models import UserProfile
+from authentication.wheel import add_points
 
 from .models import Task
 from .serializers import TaskSerializer
+
+
+def award_task(task):
+    """Recompensa del avatar + puntos en la rueda según la dificultad. Solo la primera vez."""
+    try:
+        apply_reward(task.user, vida=5, alimento=5, xp=10)
+    except Exception:
+        pass
+    if task.wheel_points:
+        return
+    profile = UserProfile.objects.filter(user=task.user, wheel_quiz_completed=True).first()
+    if profile:
+        task.wheel_points = add_points(profile, task.area, task.difficulty)
+        if task.wheel_points:
+            task.save(update_fields=['wheel_points'])
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -17,7 +34,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     - GET /api/tasks/{id}/ : detalle de una tarea
     - PUT/PATCH /api/tasks/{id}/ : actualizar tarea
     - DELETE /api/tasks/{id}/ : eliminar tarea
-    - POST /api/tasks/{id}/complete/ : marcar tarea completada (+ recompensa gamificada)
+    - POST /api/tasks/{id}/complete/ : marcar tarea completada (+ recompensa y puntos en la rueda)
     - POST /api/tasks/{id}/reopen/ : reabrir tarea
     """
     serializer_class = TaskSerializer
@@ -36,10 +53,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             if not task.completed_at:
                 task.completed_at = timezone.now()
                 task.save(update_fields=['completed_at'])
-            try:
-                apply_reward(self.request.user, vida=5, alimento=5, xp=10)
-            except Exception:
-                pass
+            award_task(task)
         elif was_completed and not task.completed:
             task.completed_at = None
             task.save(update_fields=['completed_at'])
@@ -51,10 +65,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             task.completed = True
             task.completed_at = timezone.now()
             task.save(update_fields=['completed', 'completed_at'])
-            try:
-                apply_reward(request.user, vida=5, alimento=5, xp=10)
-            except Exception:
-                pass
+            award_task(task)
         return Response(TaskSerializer(task).data)
 
     @action(detail=True, methods=['post'])

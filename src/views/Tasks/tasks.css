@@ -185,6 +185,38 @@
 .task__menu {
   position: relative;
 }
+
+/* Botón para completar */
+.task__check {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
+}
+.task__check:hover {
+  color: var(--color-green);
+  border-color: var(--color-green);
+}
+.task__check.is-checked {
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: var(--color-surface);
+}
+.task.is-done .task__title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+.task.is-done {
+  opacity: 0.75;
+}
 .task__menu .icon-btn {
   color: var(--color-text);
 }
@@ -348,6 +380,11 @@
   cursor: pointer;
   transition: background var(--duration-fast), border-color var(--duration-fast);
 }
+.diff-picker__points {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xxs);
+  color: var(--color-text-muted);
+}
 .diff-picker__option input {
   position: absolute;
   opacity: 0;
@@ -368,4 +405,30 @@
 .diff-picker__option--green:has(input:checked) {
   background: var(--tint-green);
   border-color: var(--color-green);
+}
+
+
+/* Video explicativo de tareas */
+.tasks-video {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tasks-video__text {
+  min-width: 0;
+}
+
+.tasks-video__hint {
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+}
+
+.tasks-video__player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md, 12px);
+  background: #000;
+  display: block;
 }

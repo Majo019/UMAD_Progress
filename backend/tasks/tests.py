@@ -29,13 +29,13 @@ class TaskAPITests(TestCase):
             'title': 'Estudiar para el examen final',
             'description': 'Repasar capítulos 4 al 8',
             'dueDate': '2026-11-20',
-            'priority': 'alta',
+            'difficulty': 'dificil',
             'area': 'trabajo',
         }
         res = self.client.post('/api/tasks/', task_data, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data['title'], 'Estudiar para el examen final')
-        self.assertEqual(res.data['priority'], 'alta')
+        self.assertEqual(res.data['difficulty'], 'dificil')
         self.assertFalse(res.data['completed'])
         task_id = res.data['id']
 
@@ -49,7 +49,7 @@ class TaskAPITests(TestCase):
         task = Task.objects.create(
             user=self.user,
             title='Tarea de prueba',
-            priority='media',
+            difficulty='media',
             area='trabajo',
         )
 

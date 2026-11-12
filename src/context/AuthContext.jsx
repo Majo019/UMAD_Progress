@@ -9,16 +9,6 @@ import { api, getAuthToken, setAuthToken } from '../utils/api';
  * - Persistencia del token y estado del usuario autenticado.
  */
 
-export const DEMO_USER = {
-  id: 'u-demo',
-  name: 'Pablo Montoro',
-  email: 'pablo.montoro@umad.edu.mx',
-  career: 'Ing. Software',
-  semester: 5,
-  goals: 'Dormir mejor y no dejar las entregas para el último día',
-  interests: ['Programación', 'Videojuegos', 'Diseño', 'Lectura', 'Cine'],
-};
-
 export const UMAD_DOMAIN = '@umad.edu.mx';
 
 const AuthContext = createContext(null);
@@ -67,6 +57,8 @@ export function AuthProvider({ children }) {
       token,
       loading,
       isAuthenticated: Boolean(user && (token || getAuthToken())),
+      role: user?.role || 'user',
+      isAdmin: user?.role === 'admin',
 
       /**
        * Inicio de sesión real llamando a /api/auth/login/.
@@ -142,7 +134,6 @@ export function AuthProvider({ children }) {
         }
 
         try {
-          window.localStorage.setItem('up:wheelQuizPending', JSON.stringify(true));
           window.localStorage.setItem(
             'up:avatar',
             JSON.stringify({
@@ -178,6 +169,24 @@ export function AuthProvider({ children }) {
           setTokenState(null);
           setUser(null);
         }
+      },
+
+      /** Vuelve a pedir el usuario al servidor (p. ej. después de que cambie su rueda). */
+      async refreshUser() {
+        if (!getAuthToken()) return null;
+        try {
+          const remoteUser = await api.get('/api/auth/me/');
+          if (remoteUser) setUser(remoteUser);
+          return remoteUser;
+        } catch (err) {
+          console.warn('No se pudo actualizar el usuario:', err);
+          return null;
+        }
+      },
+
+      /** Reemplaza el usuario con la versión que devolvió el servidor. */
+      setServerUser(nextUser) {
+        if (nextUser) setUser(nextUser);
       },
 
       /** Actualiza el perfil del usuario en backend y estado local */
@@ -234,5 +243,36 @@ export function RequireAuth({ children }) {
   }
 
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />;
+  return children;
+}
+
+/**
+ * Rutas exclusivas del rol `user` (la app del alumno).
+ * Si entra un administrador, se le manda a su panel /admin.
+ */
+export function RequireUser({ children }) {
+  const { user } = useAuth();
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+  return children;
+}
+
+/**
+ * Rutas exclusivas del rol `admin`.
+ * Sin sesión → /login; con sesión de alumno → app del alumno.
+ */
+export function RequireAdmin({ children }) {
+  const { isAuthenticated, loading, user } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div style={{ display: 'grid', placeItems: 'center', minHeight: '60vh', color: 'var(--color-text-muted)' }}>
+        <p>Cargando sesión…</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (user?.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 }

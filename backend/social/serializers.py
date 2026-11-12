@@ -25,11 +25,35 @@ class CalendarSyncSerializer(serializers.Serializer):
 
 
 class FriendUserSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    career = serializers.SerializerMethodField()
+    semester = serializers.SerializerMethodField()
+    interests = serializers.SerializerMethodField()
     level = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'level']
+        fields = ['id', 'username', 'name', 'career', 'semester', 'interests', 'level']
+
+    @staticmethod
+    def _profile(obj):
+        return getattr(obj, 'profile', None)
+
+    def get_name(self, obj):
+        p = self._profile(obj)
+        return (p.name if p else '') or obj.get_full_name() or obj.username
+
+    def get_career(self, obj):
+        p = self._profile(obj)
+        return p.career if p else ''
+
+    def get_semester(self, obj):
+        p = self._profile(obj)
+        return p.semester if p else None
+
+    def get_interests(self, obj):
+        p = self._profile(obj)
+        return list(p.interests) if p and isinstance(p.interests, list) else []
 
     def get_level(self, obj):
         avatar = getattr(obj, 'avatar', None)
@@ -37,8 +61,18 @@ class FriendUserSerializer(serializers.ModelSerializer):
 
 
 class FriendRequestSerializer(serializers.ModelSerializer):
+    """Solicitud recibida: incluye a quien la envió."""
     from_user = FriendUserSerializer(read_only=True)
 
     class Meta:
         model = Friendship
         fields = ['id', 'from_user', 'created_at']
+
+
+class SentFriendRequestSerializer(serializers.ModelSerializer):
+    """Solicitud enviada: incluye a quien se le envió."""
+    to_user = FriendUserSerializer(read_only=True)
+
+    class Meta:
+        model = Friendship
+        fields = ['id', 'to_user', 'created_at']
