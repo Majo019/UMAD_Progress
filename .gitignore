@@ -39,3 +39,6 @@ Thumbs.db
 # Respaldos locales de la base de datos
 *.sqlite3.bak*
 *.bak-*
+
+# Datos de alumnos con contraseñas en texto plano
+registros.txt
