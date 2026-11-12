@@ -183,10 +183,18 @@ function ExplanationVideo({ onFinished }) {
   );
 }
 
-export default function LifeWheelQuizModal() {
-  const { quizOpen, quizMandatory, completeWheelQuiz } = useAvatar();
-  // El cuestionario es obligatorio y se responde una sola vez: no se puede cerrar
-  const closeWheelQuiz = () => {};
+/**
+ * mode="initial" (por defecto): cuestionario obligatorio al crear la cuenta; lo controla AvatarContext.
+ * mode="final": la Rueda de la Vida final; se abre desde el perfil, se puede cancelar y repetir.
+ */
+export default function LifeWheelQuizModal({ mode = 'initial', open = false, onClose, onSubmit }) {
+  const avatar = useAvatar();
+  const isFinal = mode === 'final';
+  const quizOpen = isFinal ? open : avatar.quizOpen;
+  const quizMandatory = isFinal ? false : avatar.quizMandatory;
+  const completeWheelQuiz = isFinal ? onSubmit : avatar.completeWheelQuiz;
+  // El cuestionario inicial es obligatorio y se responde una sola vez: no se puede cerrar
+  const closeWheelQuiz = isFinal ? () => onClose?.() : () => {};
   const [phase, setPhase] = useState('video'); // 'video' | 'questions'
   const [videoDone, setVideoDone] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -294,7 +302,7 @@ export default function LifeWheelQuizModal() {
       open={quizOpen}
       onClose={closeWheelQuiz}
       dismissible={!quizMandatory}
-      title="Diagnóstico · Rueda de la Vida"
+      title={isFinal ? 'Rueda de la Vida final' : 'Diagnóstico · Rueda de la Vida'}
       footer={
         <>
           {!isFirst ? (
@@ -326,7 +334,7 @@ export default function LifeWheelQuizModal() {
             </Button>
           ) : (
             <Button type="button" variant="primary" icon={Sparkles} disabled={!allComplete} onClick={handleFinish}>
-              Guardar mi Rueda
+              {isFinal ? 'Guardar rueda final' : 'Guardar mi Rueda'}
             </Button>
           )}
         </>
@@ -334,8 +342,9 @@ export default function LifeWheelQuizModal() {
     >
       <div className="wheel-quiz">
         <p className="wheel-quiz__intro">
-          Responde <strong>todas</strong> las afirmaciones de cada área para calcular tu <strong>Rueda de la Vida</strong> inicial
-          (de 0 a 10 puntos por categoría).
+          Responde <strong>todas</strong> las afirmaciones de cada área para calcular tu <strong>Rueda de la Vida</strong>{' '}
+          {isFinal ? 'final' : 'inicial'} (de 0 a 10 puntos por categoría).
+          {isFinal && ' Al guardarla la compararemos con tu rueda inicial.'}
         </p>
 
         {/* Navegador de las 8 áreas: solo se puede ir a áreas ya completadas o a la actual */}

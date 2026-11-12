@@ -184,9 +184,41 @@ export function AvatarProvider({ children }) {
     [setWheel, isAuthenticated, updateProfile],
   );
 
+  /**
+   * Guarda la Rueda de la Vida final (se puede repetir). El servidor conserva la inicial
+   * para compararlas y la rueda actual pasa a ser la final. Lanza error si no se pudo guardar.
+   */
+  const saveFinalWheel = useCallback(
+    async (scoresByKey = {}) => {
+      const nextWheel = INITIAL_WHEEL.map((area) => ({
+        key: area.key,
+        value: clamp(Number(scoresByKey[area.key] ?? 0), 0, 10),
+      }));
+      const updated = await api.post('/api/auth/me/wheel/final/', { wheel: nextWheel });
+      setServerUser?.(updated);
+      return updated;
+    },
+    [setServerUser],
+  );
+
+  const toAreas = (list) =>
+    Array.isArray(list) && list.length
+      ? INITIAL_WHEEL.map((base) => {
+          const found = list.find((item) => item.key === base.key);
+          return { ...base, value: clamp(round1(Number(found?.value) || 0), 0, 10) };
+        })
+      : [];
+  const wheelInitial = useMemo(() => toAreas(user?.wheel_initial), [user?.wheel_initial]); // eslint-disable-line react-hooks/exhaustive-deps
+  const wheelFinal = useMemo(() => toAreas(user?.wheel_final), [user?.wheel_final]); // eslint-disable-line react-hooks/exhaustive-deps
+  const wheelFinalAt = user?.wheel_final_at ?? null;
+
   const value = useMemo(
     () => ({
       ...avatar,
+      wheelInitial,
+      wheelFinal,
+      wheelFinalAt,
+      saveFinalWheel,
       look: normalizeLook(look),
       setLook,
       wheel,
@@ -202,6 +234,10 @@ export function AvatarProvider({ children }) {
     }),
     [
       avatar,
+      wheelInitial,
+      wheelFinal,
+      wheelFinalAt,
+      saveFinalWheel,
       look,
       setLook,
       wheel,

@@ -14,10 +14,9 @@ import {
 
 import {
   TASK_DIFFICULTIES,
-  getTaskDifficulty,
-  useAvatar,
-  useTasks,
+  WHEEL_AREAS,
 } from '../../context';
+import { useTaskActivity } from '../../hooks/useTaskActivity';
 
 import './tasksHistory.css';
 
@@ -40,7 +39,7 @@ function HistoryItem({
   onDelete,
 }) {
   const difficulty =
-    TASK_DIFFICULTIES[getTaskDifficulty(task)];
+    TASK_DIFFICULTIES[task.difficulty] ?? TASK_DIFFICULTIES.media;
 
   return (
     <Card
@@ -93,14 +92,14 @@ function HistoryItem({
           icon={RotateCcw}
           label="Reabrir tarea"
           className="icon-btn--sm"
-          onClick={() => onReopen(task.id)}
+          onClick={() => onReopen(task)}
         />
 
         <IconButton
           icon={Trash2}
           label="Eliminar tarea"
           className="icon-btn--sm"
-          onClick={() => onDelete(task.id)}
+          onClick={() => onDelete(task)}
         />
       </div>
     </Card>
@@ -108,16 +107,15 @@ function HistoryItem({
 }
 
 export default function TasksHistoryView() {
+  // Incluye lo registrado en la pestaña Tareas y las tareas del Dashboard
   const {
     completedTasks,
-    reopenTask,
-    removeTask,
-  } = useTasks();
-
-  const { wheel } = useAvatar();
+    reopen,
+    remove,
+  } = useTaskActivity();
 
   const getArea = (key) =>
-    wheel.find((area) => area.key === key);
+    WHEEL_AREAS.find((area) => area.key === key);
 
   return (
     <section className="view tasks-history">
@@ -141,11 +139,11 @@ export default function TasksHistoryView() {
         <ul className="history-list">
           {completedTasks.map((task) => (
             <HistoryItem
-              key={task.id}
+              key={task.uid}
               task={task}
               area={getArea(task.area)}
-              onReopen={reopenTask}
-              onDelete={removeTask}
+              onReopen={reopen}
+              onDelete={remove}
             />
           ))}
         </ul>

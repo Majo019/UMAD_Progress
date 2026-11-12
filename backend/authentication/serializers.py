@@ -22,6 +22,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
     interests = serializers.SerializerMethodField()
     wheel = serializers.SerializerMethodField()
     wheel_quiz_completed = serializers.SerializerMethodField()
+    wheel_initial = serializers.SerializerMethodField()
+    wheel_final = serializers.SerializerMethodField()
+    wheel_final_at = serializers.SerializerMethodField()
     avatar_look = serializers.SerializerMethodField()
     level = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
@@ -30,7 +33,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'name', 'career', 'semester',
-            'goals', 'interests', 'wheel', 'wheel_quiz_completed', 'avatar_look', 'level', 'role'
+            'goals', 'interests', 'wheel', 'wheel_quiz_completed',
+            'wheel_initial', 'wheel_final', 'wheel_final_at', 'avatar_look', 'level', 'role'
         ]
 
     def _profile(self, obj):
@@ -65,6 +69,23 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_wheel_quiz_completed(self, obj):
         p = self._profile(obj)
         return p.wheel_quiz_completed if p else False
+
+    def get_wheel_initial(self, obj):
+        p = self._profile(obj)
+        if not p or not p.wheel_quiz_completed:
+            return []
+        # Cuentas anteriores a la foto inicial: se usa la rueda actual como aproximación
+        return normalize_wheel(p.wheel_initial or p.wheel)
+
+    def get_wheel_final(self, obj):
+        p = self._profile(obj)
+        if not p or not p.wheel_final:
+            return []
+        return normalize_wheel(p.wheel_final)
+
+    def get_wheel_final_at(self, obj):
+        p = self._profile(obj)
+        return p.wheel_final_at.isoformat() if p and p.wheel_final_at else None
 
     def get_avatar_look(self, obj):
         p = self._profile(obj)

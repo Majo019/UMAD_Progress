@@ -4,6 +4,7 @@ Reglas de la Rueda de la Vida (el servidor es la fuente de verdad).
 - El cuestionario inicial fija los valores (0–10) una sola vez.
 - Cada día que pasa, todas las áreas bajan WHEEL_DAILY_DECAY (sin bajar de 0).
 - Completar una tarea suma puntos al área elegida según su dificultad.
+- La rueda final se puede responder varias veces y se compara contra la foto inicial.
 """
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -102,6 +103,25 @@ def set_initial_wheel(profile, raw):
     if profile.wheel_quiz_completed:
         return False
     profile.wheel = normalize_wheel(raw)
+    profile.wheel_initial = profile.wheel
     profile.wheel_quiz_completed = True
+    profile.wheel_decayed_at = timezone.localdate()
+    return True
+
+
+def set_final_wheel(profile, raw):
+    """
+    Guarda la Rueda de la Vida final (se puede volver a responder las veces que se quiera).
+    La rueda actual pasa a ser la final y la baja diaria vuelve a contar desde hoy.
+    Requiere haber respondido el cuestionario inicial.
+    """
+    if not profile.wheel_quiz_completed:
+        return False
+    if not profile.wheel_initial:
+        # Cuentas anteriores a la foto inicial: la mejor aproximación es la rueda actual
+        profile.wheel_initial = normalize_wheel(profile.wheel)
+    profile.wheel_final = normalize_wheel(raw)
+    profile.wheel = profile.wheel_final
+    profile.wheel_final_at = timezone.now()
     profile.wheel_decayed_at = timezone.localdate()
     return True

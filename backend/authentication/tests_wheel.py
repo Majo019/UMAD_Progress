@@ -84,3 +84,42 @@ class WheelRulesTests(TestCase):
         self.assertEqual(values(res.data)['ocio'], 5.5)
         res = self.client.post('/api/auth/me/wheel/award/', {'area': 'nada', 'difficulty': 'media'}, format='json')
         self.assertEqual(res.status_code, 400)
+
+
+class FinalWheelTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='f@x.com', email='f@x.com', password='Clave123!')
+        self.profile = UserProfile.objects.create(user=self.user, name='F')
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+
+    def wheel(self, value):
+        return [{'key': k, 'value': value} for k in WHEEL_KEYS]
+
+    def test_final_requires_initial_quiz(self):
+        res = self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(7)}, format='json')
+        self.assertEqual(res.status_code, 400)
+
+    def test_initial_snapshot_is_kept_and_final_can_be_redone(self):
+        self.client.patch('/api/auth/me/', {'wheel': self.wheel(4), 'wheel_quiz_completed': True}, format='json')
+        # La rueda actual cambia con la baja diaria, pero la foto inicial no
+        self.profile.refresh_from_db()
+        self.profile.wheel_decayed_at = timezone.localdate() - timedelta(days=5)
+        self.profile.save()
+
+        res = self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(7)}, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual({a['value'] for a in res.data['wheel_initial']}, {4})
+        self.assertEqual({a['value'] for a in res.data['wheel_final']}, {7})
+        self.assertEqual(values(res.data)['ocio'], 7)
+        self.assertIsNotNone(res.data['wheel_final_at'])
+
+        res = self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(9)}, format='json')
+        self.assertEqual({a['value'] for a in res.data['wheel_final']}, {9})
+        self.assertEqual({a['value'] for a in res.data['wheel_initial']}, {4})
+
+    def test_rejects_empty_payload(self):
+        self.client.patch('/api/auth/me/', {'wheel': self.wheel(4), 'wheel_quiz_completed': True}, format='json')
+        res = self.client.post('/api/auth/me/wheel/final/', {}, format='json')
+        self.assertEqual(res.status_code, 400)

@@ -9,6 +9,7 @@ import {
   Palette,
   PieChart,
   Pencil,
+  RefreshCcw,
   RotateCcw,
   Settings,
   Sun,
@@ -18,7 +19,10 @@ import AvatarWidget from '../../components/avatar/AvatarWidget';
 import AvatarCustomizer from '../../components/avatar/AvatarCustomizer';
 import { useAuth, useAvatar, useCalendar, useTheme } from '../../context';
 import { clearPersistedState } from '../../hooks/usePersistentState';
+import LifeWheelQuizModal from '../../components/wheel/LifeWheelQuizModal';
+import { useTaskActivity } from '../../hooks/useTaskActivity';
 import LifeWheel from './LifeWheel';
+import WheelComparison from './WheelComparison';
 import './profile.css';
 
 function EditProfileModal({ open, onClose }) {
@@ -123,13 +127,27 @@ function SettingsModal({ open, onClose }) {
 
 export default function ProfileView() {
   const { user } = useAuth();
-  const { wheel } = useAvatar();
+  const { wheel, wheelInitial, wheelFinal, wheelFinalAt, saveFinalWheel } = useAvatar();
+  const { allTasks, completedTasks } = useTaskActivity();
   const navigate = useNavigate();
+  const [finalError, setFinalError] = useState('');
   const location = useLocation();
 
   const [selectedArea, setSelectedArea] = useState(null);
   const [showInfo, setShowInfo] = useState(false);
-  const [modal, setModal] = useState(null); // 'profile' | 'settings' | 'avatar'
+  const [modal, setModal] = useState(null); // 'profile' | 'settings' | 'avatar' | 'final-wheel'
+  const hasFinal = wheelFinal.length > 0;
+
+  const submitFinalWheel = async (scores) => {
+    setFinalError('');
+    try {
+      await saveFinalWheel(scores);
+      setModal(null);
+    } catch (err) {
+      setFinalError(err?.message || 'No se pudo guardar tu rueda final. Intenta de nuevo.');
+      setModal(null);
+    }
+  };
 
   // El engrane del header abre Configuración directamente
   useEffect(() => {
@@ -177,13 +195,40 @@ export default function ProfileView() {
         {showInfo && (
           <p className="wheel-card__info">
             Tu rueda parte de las respuestas de tu cuestionario inicial (0 a 10 por área). Cada día todas las áreas bajan 0.2,
-            y al completar una tarea su área sube según la dificultad: tranquila +0.2, media +0.5 y difícil +1.
+            y al completar una tarea su área sube según la dificultad: tranquila +0.2, media +0.5 y difícil +1. Al final del
+            periodo puedes responder la rueda final para compararla con la inicial y recibir retroalimentación por área.
           </p>
         )}
 
         <LifeWheel areas={wheel} selected={selectedArea} onSelect={setSelectedArea} />
 
+        {user?.wheel_quiz_completed && (
+          <div className="wheel-card__final">
+            <p className="wheel-card__final-hint">
+              {hasFinal
+                ? 'Puedes volver a responder tu rueda final para actualizar la comparación con la inicial.'
+                : 'Al terminar el periodo, responde de nuevo el cuestionario para comparar tu rueda inicial con la final.'}
+            </p>
+            <Button
+              variant={hasFinal ? 'secondary' : 'blue'}
+              size="sm"
+              icon={RefreshCcw}
+              onClick={() => setModal('final-wheel')}
+            >
+              {hasFinal ? 'Volver a hacer la rueda final' : 'Hacer Rueda de la Vida final'}
+            </Button>
+            {finalError && (
+              <p className="wheel-card__final-error" role="alert">
+                {finalError}
+              </p>
+            )}
+          </div>
+        )}
       </Card>
+
+      {hasFinal && (
+        <WheelComparison initial={wheelInitial} final={wheelFinal} finalAt={wheelFinalAt} tasks={allTasks} />
+      )}
 
       {/* Menú */}
       <Card className="menu-card">
@@ -192,6 +237,7 @@ export default function ProfileView() {
             <History size={18} />
           </span>
           <span>Ver Tareas Pasadas</span>
+          {completedTasks.length > 0 && <span className="menu-row__count">{completedTasks.length}</span>}
           <ChevronRight size={18} className="menu-row__chevron" />
         </button>
         <button type="button" className="menu-row" onClick={() => setModal('profile')}>
@@ -213,6 +259,9 @@ export default function ProfileView() {
       {modal === 'avatar' && <AvatarCustomizer open onClose={() => setModal(null)} />}
       {modal === 'profile' && <EditProfileModal open onClose={() => setModal(null)} />}
       {modal === 'settings' && <SettingsModal open onClose={() => setModal(null)} />}
+      {modal === 'final-wheel' && (
+        <LifeWheelQuizModal mode="final" open onClose={() => setModal(null)} onSubmit={submitFinalWheel} />
+      )}
     </section>
   );
 }

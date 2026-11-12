@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 from gamification.services import get_profile
 
 from .models import UserProfile
-from .wheel import DIFFICULTY_POINTS, WHEEL_KEYS, add_points, apply_decay, set_initial_wheel
+from .wheel import DIFFICULTY_POINTS, WHEEL_KEYS, add_points, apply_decay, set_final_wheel, set_initial_wheel
 from .serializers import RegisterSerializer, LoginSerializer, UserDetailSerializer
 
 User = get_user_model()
@@ -199,4 +199,21 @@ def wheel_award_view(request):
     if not profile.wheel_quiz_completed:
         return Response({'detail': 'Primero responde el cuestionario de la rueda.'}, status=status.HTTP_400_BAD_REQUEST)
     add_points(profile, area, difficulty)
+    return Response(UserDetailSerializer(request.user).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def wheel_final_view(request):
+    """
+    POST /api/auth/me/wheel/final/  { wheel: [{key, value}, ...] }
+    Guarda la Rueda de la Vida final (se puede repetir) para compararla con la inicial.
+    """
+    raw = request.data.get('wheel')
+    if not isinstance(raw, list) or not raw:
+        return Response({'detail': 'Envía los valores de la rueda.'}, status=status.HTTP_400_BAD_REQUEST)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if not set_final_wheel(profile, raw):
+        return Response({'detail': 'Primero responde el cuestionario inicial.'}, status=status.HTTP_400_BAD_REQUEST)
+    profile.save()
     return Response(UserDetailSerializer(request.user).data)

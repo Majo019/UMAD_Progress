@@ -19,6 +19,11 @@ class UserProfile(models.Model):
     wheel = models.JSONField(default=list, blank=True)
     # Último día en que se aplicó la baja diaria de la rueda (ver authentication/wheel.py)
     wheel_decayed_at = models.DateField(null=True, blank=True)
+    # Foto fija del cuestionario inicial (no cambia con la baja diaria ni con las tareas)
+    wheel_initial = models.JSONField(default=list, blank=True)
+    # Rueda final: se puede volver a responder; se compara contra la inicial
+    wheel_final = models.JSONField(default=list, blank=True)
+    wheel_final_at = models.DateTimeField(null=True, blank=True)
     avatar_look = models.JSONField(default=dict, blank=True)
 
     @property

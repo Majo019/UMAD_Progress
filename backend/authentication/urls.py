@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
 
-from .views import register_view, login_view, me_view, logout_view, wheel_award_view
+from .views import register_view, login_view, me_view, logout_view, wheel_award_view, wheel_final_view
 
 urlpatterns = [
     path('register/', register_view, name='auth-register'),
@@ -9,6 +9,7 @@ urlpatterns = [
     path('token/', obtain_auth_token, name='auth-token'),
     path('me/', me_view, name='auth-me'),
     path('me/wheel/award/', wheel_award_view, name='auth-wheel-award'),
+    path('me/wheel/final/', wheel_final_view, name='auth-wheel-final'),
     path('logout/', logout_view, name='auth-logout'),
 ]
 
