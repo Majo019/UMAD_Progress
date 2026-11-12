@@ -81,5 +81,6 @@ class Command(BaseCommand):
                 state = 'actualizado (contraseña restablecida)'
             else:
                 state = 'ya existía'
-            pwd_hint = f' · contraseña: {password}' if created or reset_passwords else ''
+            from_env = bool(os.environ.get(seed['password_env']))
+            pwd_hint = f' · contraseña: {password}' if (created or reset_passwords) and not from_env else ''
             self.stdout.write(self.style.SUCCESS(f'[{seed["role"]}] {email} {state}{pwd_hint}'))

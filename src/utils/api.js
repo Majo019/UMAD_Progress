@@ -1,6 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace(/\/$/, '')
-  : '';
+// En Render, VITE_API_URL llega como host sin protocolo (ej. umad-progress-api.onrender.com)
+const RAW_API_URL = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+const BASE_URL = RAW_API_URL && !/^https?:\/\//.test(RAW_API_URL) ? `https://${RAW_API_URL}` : RAW_API_URL;
 
 export function getAuthToken() {
   try {
