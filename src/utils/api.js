@@ -1,6 +1,13 @@
-// En Render, VITE_API_URL llega como host sin protocolo (ej. umad-progress-api.onrender.com)
-const RAW_API_URL = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
-const BASE_URL = RAW_API_URL && !/^https?:\/\//.test(RAW_API_URL) ? `https://${RAW_API_URL}` : RAW_API_URL;
+// VITE_API_URL puede llegar sin protocolo o solo con el nombre interno del servicio de Render
+// (ej. "umad-progress-api"); en ese caso se completa a https://umad-progress-api.onrender.com
+function resolveApiUrl(raw) {
+  let url = (raw || '').trim().replace(/\/$/, '');
+  if (!url || /^https?:\/\//.test(url)) return url;
+  if (!url.includes('.')) url = `${url}.onrender.com`;
+  return `https://${url}`;
+}
+
+const BASE_URL = resolveApiUrl(import.meta.env.VITE_API_URL);
 
 export function getAuthToken() {
   try {

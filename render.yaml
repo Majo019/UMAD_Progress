@@ -46,9 +46,7 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      # URL pública de la API (fromService/host solo da el nombre interno de la red privada)
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: umad-progress-api
-          property: host
+        value: https://umad-progress-api.onrender.com
 
