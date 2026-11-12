@@ -208,12 +208,12 @@ def wheel_final_view(request):
     """
     POST /api/auth/me/wheel/final/  { wheel: [{key, value}, ...] }
     Guarda la Rueda de la Vida final (se puede repetir) para compararla con la inicial.
+    Si la cuenta no tenía rueda inicial, estas respuestas se guardan como la inicial.
     """
     raw = request.data.get('wheel')
     if not isinstance(raw, list) or not raw:
         return Response({'detail': 'Envía los valores de la rueda.'}, status=status.HTTP_400_BAD_REQUEST)
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    if not set_final_wheel(profile, raw):
-        return Response({'detail': 'Primero responde el cuestionario inicial.'}, status=status.HTTP_400_BAD_REQUEST)
+    set_final_wheel(profile, raw)
     profile.save()
     return Response(UserDetailSerializer(request.user).data)

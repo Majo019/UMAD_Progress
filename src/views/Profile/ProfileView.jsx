@@ -183,6 +183,15 @@ export default function ProfileView() {
             <PieChart size={20} aria-hidden="true" /> Rueda de la Vida
           </h2>
           <div className="wheel-card__actions">
+            <Button
+              variant="blue"
+              size="sm"
+              icon={RefreshCcw}
+              onClick={() => setModal('final-wheel')}
+              title="Volver a contestar las preguntas de la Rueda de la Vida"
+            >
+              Rehacer rueda
+            </Button>
             <IconButton
               icon={Info}
               label="¿Qué es la Rueda de la Vida?"
@@ -202,27 +211,15 @@ export default function ProfileView() {
 
         <LifeWheel areas={wheel} selected={selectedArea} onSelect={setSelectedArea} />
 
-        {user?.wheel_quiz_completed && (
-          <div className="wheel-card__final">
-            <p className="wheel-card__final-hint">
-              {hasFinal
-                ? 'Puedes volver a responder tu rueda final para actualizar la comparación con la inicial.'
-                : 'Al terminar el periodo, responde de nuevo el cuestionario para comparar tu rueda inicial con la final.'}
-            </p>
-            <Button
-              variant={hasFinal ? 'secondary' : 'blue'}
-              size="sm"
-              icon={RefreshCcw}
-              onClick={() => setModal('final-wheel')}
-            >
-              {hasFinal ? 'Volver a hacer la rueda final' : 'Hacer Rueda de la Vida final'}
-            </Button>
-            {finalError && (
-              <p className="wheel-card__final-error" role="alert">
-                {finalError}
-              </p>
-            )}
-          </div>
+        <p className="wheel-card__final-hint">
+          {hasFinal
+            ? 'Usa «Rehacer rueda» cuando quieras para actualizar la comparación con tu rueda inicial.'
+            : 'Usa «Rehacer rueda» para contestar de nuevo las preguntas y comparar tu rueda inicial con la final.'}
+        </p>
+        {finalError && (
+          <p className="wheel-card__final-error" role="alert">
+            {finalError}
+          </p>
         )}
       </Card>
 

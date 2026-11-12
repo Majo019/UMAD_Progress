@@ -92,8 +92,13 @@
 .wheel-card__title svg {
   color: var(--color-coral-soft);
 }
+.wheel-card > .row-between {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
 .wheel-card__actions {
   display: flex;
+  align-items: center;
   gap: var(--space-1);
 }
 .wheel-card__actions .icon-btn {
@@ -311,23 +316,16 @@
   font-weight: 700;
 }
 
-/* Botón de rueda final */
-.wheel-card__final {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
-}
+/* Rehacer rueda */
 .wheel-card__final-hint {
-  margin: 0;
+  margin: var(--space-2) 0 0;
+  text-align: center;
   font-size: var(--fs-xs);
   color: var(--color-text-muted);
 }
 .wheel-card__final-error {
-  margin: 0;
+  margin: var(--space-1) 0 0;
+  text-align: center;
   font-size: var(--fs-xs);
   color: var(--color-red, var(--color-coral-strong));
 }

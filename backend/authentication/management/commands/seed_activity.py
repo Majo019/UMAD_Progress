@@ -151,9 +151,10 @@ class Command(BaseCommand):
             {'key': key, 'value': rng.choices(range(2, 11), [1, 2, 3, 4, 5, 5, 4, 3, 2])[0]}
             for key, _ in WHEEL_AREAS
         ])
+        profile.wheel_initial = profile.wheel
         profile.wheel_quiz_completed = True
         profile.wheel_decayed_at = timezone.localdate()
-        profile.save(update_fields=['wheel', 'wheel_quiz_completed', 'wheel_decayed_at'])
+        profile.save(update_fields=['wheel', 'wheel_initial', 'wheel_quiz_completed', 'wheel_decayed_at'])
 
         return {
             'tasks': total,

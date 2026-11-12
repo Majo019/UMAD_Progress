@@ -113,10 +113,11 @@ def set_final_wheel(profile, raw):
     """
     Guarda la Rueda de la Vida final (se puede volver a responder las veces que se quiera).
     La rueda actual pasa a ser la final y la baja diaria vuelve a contar desde hoy.
-    Requiere haber respondido el cuestionario inicial.
+    Si la cuenta nunca respondió el cuestionario inicial, estas respuestas quedan como su rueda inicial.
     """
     if not profile.wheel_quiz_completed:
-        return False
+        set_initial_wheel(profile, raw)
+        return True
     if not profile.wheel_initial:
         # Cuentas anteriores a la foto inicial: la mejor aproximación es la rueda actual
         profile.wheel_initial = normalize_wheel(profile.wheel)

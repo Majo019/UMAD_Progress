@@ -97,9 +97,26 @@ class FinalWheelTests(TestCase):
     def wheel(self, value):
         return [{'key': k, 'value': value} for k in WHEEL_KEYS]
 
-    def test_final_requires_initial_quiz(self):
+    def test_account_without_initial_quiz_gets_it_as_initial(self):
         res = self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(7)}, format='json')
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.data['wheel_quiz_completed'])
+        self.assertEqual({a['value'] for a in res.data['wheel_initial']}, {7})
+        self.assertEqual(res.data['wheel_final'], [])
+
+        res = self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(8)}, format='json')
+        self.assertEqual({a['value'] for a in res.data['wheel_initial']}, {7})
+        self.assertEqual({a['value'] for a in res.data['wheel_final']}, {8})
+
+    def test_existing_account_without_snapshot_can_redo(self):
+        # Cuenta creada antes de que existiera la foto inicial
+        self.profile.wheel = self.wheel(3)
+        self.profile.wheel_quiz_completed = True
+        self.profile.save()
+        res = self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(6)}, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual({a['value'] for a in res.data['wheel_initial']}, {3})
+        self.assertEqual({a['value'] for a in res.data['wheel_final']}, {6})
 
     def test_initial_snapshot_is_kept_and_final_can_be_redone(self):
         self.client.patch('/api/auth/me/', {'wheel': self.wheel(4), 'wheel_quiz_completed': True}, format='json')
