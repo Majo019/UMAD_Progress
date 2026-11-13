@@ -98,6 +98,15 @@ def add_points(profile, area, difficulty, save=True):
     return float(points)
 
 
+def record_snapshot(profile, kind, values, when=None):
+    """Guarda una copia de la rueda respondida para el historial del perfil."""
+    from .models import WheelSnapshot
+
+    return WheelSnapshot.objects.create(
+        user_id=profile.user_id, kind=kind, values=normalize_wheel(values), created_at=when or timezone.now()
+    )
+
+
 def set_initial_wheel(profile, raw):
     """Guarda el resultado del cuestionario inicial. Solo funciona una vez."""
     if profile.wheel_quiz_completed:
@@ -106,6 +115,7 @@ def set_initial_wheel(profile, raw):
     profile.wheel_initial = profile.wheel
     profile.wheel_quiz_completed = True
     profile.wheel_decayed_at = timezone.localdate()
+    record_snapshot(profile, 'initial', profile.wheel)
     return True
 
 
@@ -125,4 +135,5 @@ def set_final_wheel(profile, raw):
     profile.wheel = profile.wheel_final
     profile.wheel_final_at = timezone.now()
     profile.wheel_decayed_at = timezone.localdate()
+    record_snapshot(profile, 'final', profile.wheel_final, profile.wheel_final_at)
     return True

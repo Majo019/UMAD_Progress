@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from gamification.services import get_profile
 
-from .models import UserProfile
-from .wheel import DIFFICULTY_POINTS, WHEEL_KEYS, add_points, apply_decay, set_final_wheel, set_initial_wheel
+from .models import UserProfile, WheelSnapshot
+from .wheel import normalize_wheel, DIFFICULTY_POINTS, WHEEL_KEYS, add_points, apply_decay, set_final_wheel, set_initial_wheel
 from .serializers import RegisterSerializer, LoginSerializer, UserDetailSerializer
 
 User = get_user_model()
@@ -217,3 +217,22 @@ def wheel_final_view(request):
     set_final_wheel(profile, raw)
     profile.save()
     return Response(UserDetailSerializer(request.user).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def wheel_history_view(request):
+    """
+    GET /api/auth/me/wheel/history/
+    Lista todas las ruedas respondidas (inicial y rehechas), de la más antigua a la más reciente.
+    """
+    snapshots = WheelSnapshot.objects.filter(user=request.user).order_by('created_at', 'id')
+    return Response([
+        {
+            'id': s.id,
+            'kind': s.kind,
+            'created_at': s.created_at.isoformat(),
+            'wheel': normalize_wheel(s.values),
+        }
+        for s in snapshots
+    ])

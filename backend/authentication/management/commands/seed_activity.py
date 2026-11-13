@@ -6,8 +6,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from authentication.models import Role, UserProfile
-from authentication.wheel import WHEEL_AREAS, normalize_wheel
+from authentication.models import Role, UserProfile, WheelSnapshot
+from authentication.wheel import WHEEL_AREAS, normalize_wheel, record_snapshot
 from gamification.models import AvatarProfile
 from gamification.services import get_profile, unlock_items, xp_needed
 from pomodoro.models import PomodoroSession
@@ -155,6 +155,8 @@ class Command(BaseCommand):
         profile.wheel_quiz_completed = True
         profile.wheel_decayed_at = timezone.localdate()
         profile.save(update_fields=['wheel', 'wheel_initial', 'wheel_quiz_completed', 'wheel_decayed_at'])
+        WheelSnapshot.objects.filter(user=user).delete()
+        record_snapshot(profile, 'initial', profile.wheel, user.date_joined)
 
         return {
             'tasks': total,

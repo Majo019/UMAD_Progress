@@ -603,3 +603,232 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Historial de ruedas */
+.wheel-hist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  --hist-line: var(--color-blue);
+}
+.wheel-hist__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.wheel-hist__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 132px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--tint-neutral);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+.wheel-hist__item.is-active {
+  border-color: var(--hist-line);
+  background: var(--tint-blue);
+}
+.wheel-hist__item-name {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+.wheel-hist__item-date {
+  font-size: var(--fs-xxs);
+  color: var(--color-text-muted);
+}
+.wheel-hist__item-avg {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.wheel-hist__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-xxs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.wheel-hist__delta.is-up {
+  color: var(--color-green);
+}
+.wheel-hist__delta.is-down {
+  color: var(--color-coral-strong);
+}
+.wheel-hist__selected-title {
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+.wheel-hist__charts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.wheel-hist__controls {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.wheel-hist__subtitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.wheel-hist__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs, 0.8rem);
+  color: var(--color-text-muted);
+}
+.wheel-hist__select select {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: inherit;
+}
+.wheel-hist__hint {
+  font-size: var(--fs-xxs);
+  color: var(--color-text-muted);
+}
+.wheel-hist__line {
+  position: relative;
+}
+.wheel-hist__line svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.wheel-hist__grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.wheel-hist__tick {
+  fill: var(--color-text-muted);
+  font-size: 10px;
+}
+.wheel-hist__cross {
+  stroke: var(--color-border-strong);
+  stroke-dasharray: 3 3;
+}
+.wheel-hist__path {
+  fill: none;
+  stroke: var(--hist-line);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.wheel-hist__path.is-live {
+  stroke-dasharray: 4 4;
+}
+.wheel-hist__dot {
+  fill: var(--hist-line);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+.wheel-hist__dot.is-live {
+  fill: var(--color-surface);
+  stroke: var(--hist-line);
+}
+.wheel-hist__tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 12px));
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-card);
+  font-size: var(--fs-xxs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+.wheel-hist__tooltip strong {
+  color: var(--color-text);
+}
+.wheel-hist__tooltip-title {
+  font-weight: 700;
+  color: var(--color-text);
+}
+.wheel-hist__grid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+}
+.wheel-hist__mini {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.wheel-hist__mini.is-active {
+  border-color: var(--hist-line);
+}
+.wheel-hist__mini-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-xxs);
+  font-weight: 600;
+}
+.wheel-hist__spark {
+  width: 100%;
+  height: 36px;
+}
+.wheel-hist__table-wrap summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+.wheel-hist__table-scroll {
+  overflow-x: auto;
+  margin-top: var(--space-2);
+}
+.wheel-hist__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-xxs);
+}
+.wheel-hist__table th,
+.wheel-hist__table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: right;
+  white-space: nowrap;
+}
+.wheel-hist__table th[scope='row'],
+.wheel-hist__table thead th:first-child {
+  text-align: left;
+}
+@media (min-width: 640px) {
+  .wheel-hist__grid-list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

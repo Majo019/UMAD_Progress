@@ -140,3 +140,40 @@ class FinalWheelTests(TestCase):
         self.client.patch('/api/auth/me/', {'wheel': self.wheel(4), 'wheel_quiz_completed': True}, format='json')
         res = self.client.post('/api/auth/me/wheel/final/', {}, format='json')
         self.assertEqual(res.status_code, 400)
+
+
+class WheelHistoryTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='h@x.com', email='h@x.com', password='Clave123!')
+        UserProfile.objects.create(user=self.user, name='H')
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+
+    def wheel(self, value):
+        return [{'key': k, 'value': value} for k in WHEEL_KEYS]
+
+    def test_history_starts_empty(self):
+        self.assertEqual(self.client.get('/api/auth/me/wheel/history/').data, [])
+
+    def test_history_records_initial_and_each_redo(self):
+        self.client.patch('/api/auth/me/', {'wheel': self.wheel(4), 'wheel_quiz_completed': True}, format='json')
+        # Un segundo intento del cuestionario inicial no agrega otra rueda
+        self.client.patch('/api/auth/me/', {'wheel': self.wheel(9), 'wheel_quiz_completed': True}, format='json')
+        self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(6)}, format='json')
+        self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(8)}, format='json')
+
+        data = self.client.get('/api/auth/me/wheel/history/').data
+        self.assertEqual([s['kind'] for s in data], ['initial', 'final', 'final'])
+        self.assertEqual([s['wheel'][0]['value'] for s in data], [4, 6, 8])
+        self.assertEqual(len(data[0]['wheel']), len(WHEEL_KEYS))
+        self.assertTrue(all(s['created_at'] for s in data))
+
+    def test_history_is_private(self):
+        other = User.objects.create_user(username='o@x.com', email='o@x.com', password='Clave123!')
+        UserProfile.objects.create(user=other)
+        self.client.post('/api/auth/me/wheel/final/', {'wheel': self.wheel(5)}, format='json')
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f'Token {Token.objects.create(user=other).key}')
+        self.assertEqual(client.get('/api/auth/me/wheel/history/').data, [])
+        self.assertEqual(APIClient().get('/api/auth/me/wheel/history/').status_code, 401)

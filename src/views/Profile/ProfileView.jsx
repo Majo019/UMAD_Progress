@@ -23,6 +23,7 @@ import LifeWheelQuizModal from '../../components/wheel/LifeWheelQuizModal';
 import { useTaskActivity } from '../../hooks/useTaskActivity';
 import LifeWheel from './LifeWheel';
 import WheelComparison from './WheelComparison';
+import WheelHistory from './WheelHistory';
 import './profile.css';
 
 function EditProfileModal({ open, onClose }) {
@@ -226,6 +227,8 @@ export default function ProfileView() {
       {hasFinal && (
         <WheelComparison initial={wheelInitial} final={wheelFinal} finalAt={wheelFinalAt} tasks={allTasks} />
       )}
+
+      {user?.wheel_quiz_completed && <WheelHistory />}
 
       {/* Menú */}
       <Card className="menu-card">

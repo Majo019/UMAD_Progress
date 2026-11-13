@@ -34,6 +34,25 @@ class UserProfile(models.Model):
         return f"{self.user.username} ({self.name or 'Sin nombre'}) [{self.role}]"
 
 
+class WheelSnapshot(models.Model):
+    """Foto de cada Rueda de la Vida respondida (inicial y cada vez que se rehace)."""
+
+    class Kind(models.TextChoices):
+        INITIAL = 'initial', 'Inicial'
+        FINAL = 'final', 'Rehecha'
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wheel_snapshots')
+    kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.FINAL)
+    values = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        ordering = ['created_at', 'id']
+
+    def __str__(self):
+        return f"{self.user.username} · {self.get_kind_display()} · {self.created_at:%Y-%m-%d}"
+
+
 class AdminProfile(models.Model):
     """Perfil exclusivo de los administradores de la plataforma."""
 
