@@ -1,0 +1,46 @@
+.recurrence {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.recurrence__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.recurrence .input:disabled {
+  opacity: 0.6;
+}
+.recurrence__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.recurrence__day {
+  aspect-ratio: 1;
+  max-height: 40px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.recurrence__day.is-on {
+  background: var(--tint-blue);
+  border-color: var(--color-blue);
+  color: var(--color-text);
+}
+.recurrence__day:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+.recurrence__hint {
+  font-size: var(--fs-xxs);
+  color: var(--color-text-muted);
+}

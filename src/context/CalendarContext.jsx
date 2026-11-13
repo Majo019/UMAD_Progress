@@ -1,13 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useAvatar } from './AvatarContext';
+import { describeRecurrence, expandRecurrence, newSeriesId } from '../utils/recurrence';
 
 /**
  * CalendarContext
  * Tareas y actividades (entregas, exámenes, reuniones, bloques de estudio).
  * Evento: { id, title, date: 'YYYY-MM-DD', time: 'HH:MM', detail, type, difficulty, area,
- *           completed, completedAt, pointsAwarded }
- * Al completarla, su área de la rueda sube según la dificultad (solo la primera vez).
+ *           completed, completedAt, pointsAwarded, rewarded, seriesId?, repeatLabel? }
+ * Al completarla, su área de la rueda sube según la dificultad y el personaje recibe
+ * vida, alimento, cariño y XP (solo la primera vez).
+ * Las tareas recurrentes se guardan como una tarea por fecha, unidas por `seriesId`.
  * difficulty: 'dificil' | 'media' | 'tranquila' — define el color de la tarea.
  */
 
@@ -65,7 +68,7 @@ const CalendarContext = createContext(null);
 
 export function CalendarProvider({ children }) {
   const [events, setEvents] = usePersistentState('up:events', []);
-  const { awardArea } = useAvatar();
+  const { awardArea, rewardTaskCompletion } = useAvatar();
 
   // Borra los eventos de ejemplo que hayan quedado guardados en este navegador
   useEffect(() => {
@@ -74,8 +77,22 @@ export function CalendarProvider({ children }) {
     }
   }, [events, setEvents]);
 
+  /** Agrega una tarea; con `recurrence` se agenda una copia por cada fecha de la serie. */
   const addEvent = useCallback(
-    (event) => setEvents((prev) => [...prev, { ...event, id: `e-${Date.now()}` }]),
+    (event, recurrence) => {
+      const dates = expandRecurrence(event.date, recurrence);
+      const stamp = Date.now();
+      if (dates.length <= 1) {
+        setEvents((prev) => [...prev, { ...event, id: `e-${stamp}` }]);
+        return;
+      }
+      const seriesId = newSeriesId();
+      const repeatLabel = describeRecurrence(recurrence);
+      setEvents((prev) => [
+        ...prev,
+        ...dates.map((date, i) => ({ ...event, date, id: `e-${stamp}-${i}`, seriesId, repeatLabel })),
+      ]);
+    },
     [setEvents],
   );
 
@@ -89,21 +106,35 @@ export function CalendarProvider({ children }) {
     [setEvents],
   );
 
+  /** Borra las tareas pendientes de una serie recurrente (las completadas se quedan en el historial). */
+  const removeSeries = useCallback(
+    (seriesId) => setEvents((prev) => prev.filter((e) => e.seriesId !== seriesId || e.completed)),
+    [setEvents],
+  );
+
   const completeEvent = useCallback(
     (id) => {
       const event = events.find((e) => e.id === id);
       if (!event || event.completed) return;
       const shouldAward = Boolean(event.area) && !event.pointsAwarded;
+      const shouldReward = !event.rewarded;
       setEvents((prev) =>
         prev.map((e) =>
           e.id === id
-            ? { ...e, completed: true, completedAt: new Date().toISOString(), pointsAwarded: e.pointsAwarded || shouldAward }
+            ? {
+                ...e,
+                completed: true,
+                completedAt: new Date().toISOString(),
+                pointsAwarded: e.pointsAwarded || shouldAward,
+                rewarded: true,
+              }
             : e,
         ),
       );
       if (shouldAward) awardArea(event.area, getDifficulty(event));
+      if (shouldReward) rewardTaskCompletion({ sync: true });
     },
-    [events, setEvents, awardArea],
+    [events, setEvents, awardArea, rewardTaskCompletion],
   );
 
   const reopenEvent = useCallback(
@@ -128,11 +159,12 @@ export function CalendarProvider({ children }) {
       addEvent,
       updateEvent,
       removeEvent,
+      removeSeries,
       completeEvent,
       reopenEvent,
       resetEvents: () => setEvents([]),
     }),
-    [events, eventsByDate, addEvent, updateEvent, removeEvent, completeEvent, reopenEvent, setEvents],
+    [events, eventsByDate, addEvent, updateEvent, removeEvent, removeSeries, completeEvent, reopenEvent, setEvents],
   );
 
   return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>;

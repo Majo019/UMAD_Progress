@@ -23,6 +23,8 @@ class Task(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     # Puntos que esta tarea ya sumó a la rueda (solo se otorgan la primera vez que se completa)
     wheel_points = models.FloatField(default=0)
+    # Si ya se entregó la recompensa del personaje (vida, alimento, cariño y XP); solo una vez por tarea
+    rewarded = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -27,6 +27,7 @@ import {
 } from '../../context';
 
 import TaskFormModal from './TaskFormModal';
+import { expandRecurrence } from '../../utils/recurrence';
 import './dashboard.css';
 
 function TaskItem({
@@ -144,14 +145,16 @@ export default function DashboardView() {
       )
     : null;
 
-  const handleSubmit = (data) => {
+  const handleSubmit = ({ recurrence, ...data }) => {
     if (modal?.initial) {
       updateTask(
         modal.initial.id,
         data,
       );
     } else {
-      addTask(data);
+      // Tarea recurrente: se crea una tarea por cada fecha de la serie
+      expandRecurrence(data.dueDate, recurrence).forEach((dueDate) => addTask({ ...data, dueDate }));
+      if (!data.dueDate) addTask(data);
     }
   };
 

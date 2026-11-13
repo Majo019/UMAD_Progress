@@ -79,3 +79,41 @@ class TaskAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 0)
 
+
+
+class TaskRewardTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='r@x.com', email='r@x.com', password='Clave123!')
+        UserProfile.objects.create(user=self.user, name='R')
+        avatar = get_profile(self.user)
+        avatar.vida, avatar.alimento, avatar.carino = 50, 50, 50
+        avatar.save()
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {Token.objects.create(user=self.user).key}')
+
+    def stats(self):
+        a = get_profile(self.user)
+        a.refresh_from_db()
+        return a.vida, a.alimento, a.carino, a.xp
+
+    def test_completing_task_rewards_all_stats_and_xp_once(self):
+        task = Task.objects.create(user=self.user, title='Meditar', area='retrospeccion', difficulty='tranquila')
+        res = self.client.post(f'/api/tasks/{task.id}/complete/')
+        self.assertTrue(res.data['rewarded'])
+        self.assertEqual(self.stats(), (55, 55, 55, 10))
+
+        # Reabrir y volver a completar no vuelve a dar recompensa
+        self.client.post(f'/api/tasks/{task.id}/reopen/')
+        self.client.post(f'/api/tasks/{task.id}/complete/')
+        self.assertEqual(self.stats(), (55, 55, 55, 10))
+
+    def test_completing_via_patch_also_rewards(self):
+        task = Task.objects.create(user=self.user, title='Meditar')
+        self.client.patch(f'/api/tasks/{task.id}/', {'completed': True}, format='json')
+        self.assertEqual(self.stats(), (55, 55, 55, 10))
+
+    def test_each_recurring_occurrence_rewards(self):
+        for day in ('2026-11-14', '2026-11-15', '2026-11-16'):
+            res = self.client.post('/api/tasks/', {'title': 'Meditar', 'dueDate': day}, format='json')
+            self.client.post(f"/api/tasks/{res.data['id']}/complete/")
+        self.assertEqual(self.stats(), (65, 65, 65, 30))

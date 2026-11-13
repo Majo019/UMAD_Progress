@@ -23,6 +23,12 @@ export const STAT_META = {
 
 export const XP_PER_LEVEL = 100;
 
+/**
+ * Recompensa del personaje por completar una tarea (una sola vez por tarea).
+ * Debe coincidir con TASK_REWARD de backend/tasks/views.py.
+ */
+export const TASK_REWARD = { vida: 5, alimento: 5, carino: 5, xp: 10 };
+
 const INITIAL_AVATAR = {
   level: 1,
   xp: 0,
@@ -142,6 +148,23 @@ export function AvatarProvider({ children }) {
   );
 
   /**
+   * Recompensa por completar una tarea: vida, alimento, cariño y XP.
+   * `sync: true` también la guarda en el servidor (tareas del calendario); las tareas
+   * de /api/tasks/ ya la reciben en el servidor al marcarse como completadas.
+   */
+  const rewardTaskCompletion = useCallback(
+    ({ sync = false } = {}) => {
+      applyReward(TASK_REWARD);
+      if (sync && isAuthenticated && getAuthToken()) {
+        api.post('/api/avatar/reward/', TASK_REWARD).catch((err) => {
+          console.warn('No se pudo guardar la recompensa del personaje:', err);
+        });
+      }
+    },
+    [applyReward, isAuthenticated],
+  );
+
+  /**
    * Suma puntos a un área al completar una tarea (tranquila +0.2, media +0.5, difícil +1).
    * Se usa para las tareas del calendario; las del Dashboard las premia el servidor al completarlas.
    */
@@ -225,6 +248,7 @@ export function AvatarProvider({ children }) {
       quizOpen,
       quizMandatory,
       applyReward,
+      rewardTaskCompletion,
       awardArea,
       completeWheelQuiz,
       resetAvatar: () => {
@@ -244,6 +268,7 @@ export function AvatarProvider({ children }) {
       quizOpen,
       quizMandatory,
       applyReward,
+      rewardTaskCompletion,
       awardArea,
       completeWheelQuiz,
       setAvatar,

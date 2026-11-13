@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Button, Field, Modal } from '../../components/ui';
 import { DIFFICULTY, DIFFICULTY_ORDER, getTaskDifficulty, useAvatar, WHEEL_POINTS_BY_DIFFICULTY } from '../../context';
+import RecurrenceFields from '../../components/tasks/RecurrenceFields';
+import { NO_RECURRENCE } from '../../utils/recurrence';
 
 const EMPTY_FORM = {
   title: '',
@@ -19,9 +21,12 @@ export default function TaskFormModal({
   const { wheel } = useAvatar();
 
   const [form, setForm] = useState(EMPTY_FORM);
+  // Solo al crear: permite agendar la misma tarea varios días (ej. meditar)
+  const [recurrence, setRecurrence] = useState(NO_RECURRENCE);
 
   useEffect(() => {
     if (!open) return;
+    setRecurrence(NO_RECURRENCE);
 
     if (initial) {
       setForm({
@@ -51,12 +56,15 @@ export default function TaskFormModal({
     const title = form.title.trim();
 
     if (!title || !form.area) return;
+    if (!initial && recurrence.repeat === 'weekly' && !recurrence.weekdays.length) return;
+    if (!initial && recurrence.repeat !== 'none' && !recurrence.until) return;
 
-    onSubmit({
+    const data = {
       ...form,
       title,
       description: form.description.trim(),
-    });
+    };
+    onSubmit(initial ? data : { ...data, recurrence });
 
     onClose();
   };
@@ -104,6 +112,8 @@ export default function TaskFormModal({
           value={form.dueDate}
           onChange={handleChange}
         />
+
+        {!initial && <RecurrenceFields start={form.dueDate} value={recurrence} onChange={setRecurrence} />}
 
         <Field
           label="Dificultad"

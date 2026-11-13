@@ -11,12 +11,19 @@ from .models import Task
 from .serializers import TaskSerializer
 
 
+# Recompensa del personaje por completar una tarea (debe coincidir con TASK_REWARD del frontend)
+TASK_REWARD = {'vida': 5, 'alimento': 5, 'carino': 5, 'xp': 10}
+
+
 def award_task(task):
     """Recompensa del avatar + puntos en la rueda según la dificultad. Solo la primera vez."""
-    try:
-        apply_reward(task.user, vida=5, alimento=5, xp=10)
-    except Exception:
-        pass
+    if not task.rewarded:
+        try:
+            apply_reward(task.user, **TASK_REWARD)
+            task.rewarded = True
+            task.save(update_fields=['rewarded'])
+        except Exception:
+            pass
     if task.wheel_points:
         return
     profile = UserProfile.objects.filter(user=task.user, wheel_quiz_completed=True).first()

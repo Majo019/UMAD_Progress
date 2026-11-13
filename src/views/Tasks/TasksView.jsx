@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CalendarCheck, Check, ChevronLeft, Circle, ChevronRight, MoreVertical, Pencil, PlayCircle, Plus, Trash2, X } from 'lucide-react';
+import { CalendarCheck, Check, ChevronLeft, Circle, ChevronRight, MoreVertical, Pencil, PlayCircle, Plus, Repeat, Trash2, X } from 'lucide-react';
 import { Button, Card, Chip, EmptyState, IconButton, SegmentedControl } from '../../components/ui';
 import {
   DIFFICULTY,
@@ -51,6 +51,7 @@ function TaskItem({ event, showDate, onEdit, onDelete, onToggle }) {
   const type = EVENT_TYPES[event.type];
   const area = WHEEL_AREAS.find((a) => a.key === event.area);
   const difficultyKey = getDifficulty(event);
+  const { removeSeries } = useCalendar();
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -88,6 +89,9 @@ function TaskItem({ event, showDate, onEdit, onDelete, onToggle }) {
           <Chip color={diff.color}>{diff.label}</Chip>
           {area && <Chip color="blue">{area.label}</Chip>}
           {type && <Chip>{type.label}</Chip>}
+          {event.seriesId && (
+            <Chip icon={Repeat}>{event.repeatLabel || 'Recurrente'}</Chip>
+          )}
         </div>
       </div>
       <div className="task__menu" ref={ref}>
@@ -113,8 +117,21 @@ function TaskItem({ event, showDate, onEdit, onDelete, onToggle }) {
                 onDelete(event.id);
               }}
             >
-              <Trash2 size={15} /> Eliminar
+              <Trash2 size={15} /> Eliminar{event.seriesId ? ' este día' : ''}
             </button>
+            {event.seriesId && (
+              <button
+                type="button"
+                role="menuitem"
+                className="is-danger"
+                onClick={() => {
+                  setMenuOpen(false);
+                  removeSeries(event.seriesId);
+                }}
+              >
+                <Repeat size={15} /> Eliminar pendientes de la serie
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -343,9 +360,9 @@ export default function TasksView() {
   const selectDay = (date) => setSelected(toISODate(date));
   const shiftWeek = (dir) => selectDay(addDays(fromISODate(selected), dir * 7));
 
-  const handleSubmit = (data) => {
+  const handleSubmit = ({ recurrence, ...data }) => {
     if (data.id) updateEvent(data.id, data);
-    else addEvent(data);
+    else addEvent(data, recurrence);
     selectDay(fromISODate(data.date));
   };
 

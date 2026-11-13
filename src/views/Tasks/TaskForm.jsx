@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button, Field, Modal } from '../../components/ui';
 import { DIFFICULTY, DIFFICULTY_ORDER, EVENT_TYPES, getDifficulty, WHEEL_AREAS, WHEEL_POINTS_BY_DIFFICULTY } from '../../context';
+import RecurrenceFields from '../../components/tasks/RecurrenceFields';
+import { NO_RECURRENCE } from '../../utils/recurrence';
 
 const EMPTY = { title: '', date: '', time: '09:00', detail: '', type: 'entrega', difficulty: 'media', area: '' };
 
@@ -12,12 +14,16 @@ export default function TaskFormModal({ open, onClose, onSubmit, initial, defaul
     return { ...base, difficulty: initial ? getDifficulty(initial) : base.difficulty };
   });
   const isEdit = Boolean(initial?.id);
+  // Solo al crear: permite agendar la misma tarea varios días (ej. meditar)
+  const [recurrence, setRecurrence] = useState(NO_RECURRENCE);
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const submit = (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.area) return;
-    onSubmit({ ...form, title: form.title.trim(), detail: form.detail.trim() });
+    if (!isEdit && recurrence.repeat === 'weekly' && !recurrence.weekdays.length) return;
+    const data = { ...form, title: form.title.trim(), detail: form.detail.trim() };
+    onSubmit(isEdit ? data : { ...data, recurrence });
     onClose();
   };
 
@@ -73,6 +79,7 @@ export default function TaskFormModal({ open, onClose, onSubmit, initial, defaul
           <Field label="Fecha" type="date" value={form.date} onChange={set('date')} required />
           <Field label="Hora" type="time" value={form.time} onChange={set('time')} />
         </div>
+        {!isEdit && <RecurrenceFields start={form.date} value={recurrence} onChange={setRecurrence} />}
         <Field label="Tipo" as="select" value={form.type} onChange={set('type')}>
           {Object.entries(EVENT_TYPES).map(([key, t]) => (
             <option key={key} value={key}>

@@ -107,6 +107,7 @@ class Command(BaseCommand):
                 difficulty=rng.choice(DIFFICULTIES),
                 area=area,
                 completed=is_done,
+                rewarded=is_done,
                 due_date=(timezone.localtime(created) + timedelta(days=rng.randint(1, 7))).date().isoformat(),
             )
             completed_at = random_moment(rng, created, now) if is_done else None

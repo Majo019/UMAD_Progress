@@ -16,12 +16,6 @@ export function getTaskDifficulty(task) {
   return LEGACY_PRIORITY_TO_DIFFICULTY[task?.priority] ?? 'media';
 }
 
-const TASK_REWARD = {
-  vida: 5,
-  alimento: 5,
-  xp: 10,
-};
-
 /**
  * Las tareas de ejemplo (t1, t2, t3) ya no se generan. Esta lista sirve para
  * limpiar a quienes las tenían guardadas en el navegador de versiones anteriores.
@@ -40,7 +34,7 @@ export function TasksProvider({ children }) {
   const [tasks, setTasks] = usePersistentState('up:tasks', []);
   const [loading, setLoading] = useState(false);
   const { user, refreshUser } = useAuth();
-  const { applyReward } = useAvatar();
+  const { rewardTaskCompletion } = useAvatar();
 
   // Borra las tareas de ejemplo que hayan quedado guardadas en este navegador
   useEffect(() => {
@@ -74,7 +68,8 @@ export function TasksProvider({ children }) {
 
   const addTask = useCallback(
     async (taskData) => {
-      const tempId = `t-${Date.now()}`;
+      // Al agendar una tarea recurrente se crean varias seguidas: el id temporal debe ser único
+      const tempId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const newTask = {
         ...taskData,
         id: tempId,
@@ -170,12 +165,15 @@ export function TasksProvider({ children }) {
                 ...item,
                 completed: true,
                 completedAt,
+                rewarded: true,
               }
             : item,
         ),
       );
 
-      applyReward(TASK_REWARD);
+      // Vida, alimento, cariño y XP: solo la primera vez que se completa la tarea.
+      // El servidor aplica la misma recompensa y los puntos de la rueda al recibir /complete/.
+      if (!task.rewarded) rewardTaskCompletion();
 
       // El servidor suma los puntos a la rueda según la dificultad (una sola vez por tarea)
       if (getAuthToken()) {
@@ -193,7 +191,7 @@ export function TasksProvider({ children }) {
         }
       }
     },
-    [tasks, setTasks, applyReward, refreshUser],
+    [tasks, setTasks, rewardTaskCompletion, refreshUser],
   );
 
   const reopenTask = useCallback(
