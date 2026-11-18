@@ -12,6 +12,7 @@ import {
   RefreshCcw,
   RotateCcw,
   Settings,
+  Sparkles,
   Sun,
 } from 'lucide-react';
 import { Button, Card, Field, IconButton, Modal } from '../../components/ui';
@@ -225,17 +226,31 @@ export default function ProfileView() {
         )}
       </Card>
 
+      {/* Tips y videos por área de la Rueda de la Vida */}
+      <WheelTipsSection />
+
       {hasFinal && (
         <WheelComparison initial={wheelInitial} final={wheelFinal} finalAt={wheelFinalAt} tasks={allTasks} />
       )}
 
       {user?.wheel_quiz_completed && <WheelHistory />}
 
-      {/* Tips y videos por área de la Rueda de la Vida */}
-      <WheelTipsSection selectedArea={selectedArea} onSelectArea={setSelectedArea} />
-
       {/* Menú */}
       <Card className="menu-card">
+        <button
+          type="button"
+          className="menu-row"
+          onClick={() => {
+            const el = document.getElementById('tips-por-area');
+            el?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          <span className="menu-row__icon menu-row__icon--amber">
+            <Sparkles size={18} />
+          </span>
+          <span>Tips y Videos por Área</span>
+          <ChevronRight size={18} className="menu-row__chevron" />
+        </button>
         <button type="button" className="menu-row" onClick={() => navigate('/tareas-pasadas')}>
           <span className="menu-row__icon menu-row__icon--blue">
             <History size={18} />

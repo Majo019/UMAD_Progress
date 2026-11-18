@@ -233,6 +233,9 @@
 .menu-row__icon--coral {
   color: var(--color-coral-soft);
 }
+.menu-row__icon--amber {
+  color: var(--color-amber);
+}
 .menu-row__chevron {
   color: var(--color-text-muted);
 }

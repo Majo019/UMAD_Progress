@@ -44,27 +44,17 @@ const ICON_MAP = {
   Gamepad2,
 };
 
-export default function WheelTipsSection({ selectedArea, onSelectArea }) {
+export default function WheelTipsSection() {
   const { wheel } = useAvatar();
   const calendar = useCalendar();
   const tasksContext = useTasks();
 
-  const [activeKey, setActiveKey] = useState(
-    () => selectedArea || WHEEL_TIPS_DATA[0].key,
-  );
+  const [activeKey, setActiveKey] = useState(() => WHEEL_TIPS_DATA[0].key);
   const [addedTasks, setAddedTasks] = useState({});
   const [toastMessage, setToastMessage] = useState('');
 
-  // Sincronizar pestaña si el usuario toca un área en la gráfica de la rueda
-  useEffect(() => {
-    if (selectedArea && WHEEL_TIPS_DATA.some((a) => a.key === selectedArea)) {
-      setActiveKey(selectedArea);
-    }
-  }, [selectedArea]);
-
   const handleTabClick = (key) => {
     setActiveKey(key);
-    onSelectArea?.(key);
   };
 
   const currentArea = useMemo(
@@ -73,7 +63,7 @@ export default function WheelTipsSection({ selectedArea, onSelectArea }) {
   );
 
   const currentWheelArea = useMemo(
-    () => wheel.find((a) => a.key === currentArea.key),
+    () => (Array.isArray(wheel) ? wheel.find((a) => a.key === currentArea.key) : null),
     [wheel, currentArea.key],
   );
 
@@ -118,7 +108,7 @@ export default function WheelTipsSection({ selectedArea, onSelectArea }) {
   const videoSrc = `${import.meta.env.BASE_URL}videos/${currentArea.videoFile}`;
 
   return (
-    <Card className="wheel-tips-card">
+    <Card className="wheel-tips-card" id="tips-por-area">
       {/* Encabezado del apartado */}
       <div className="wheel-tips-header">
         <div className="wheel-tips-header__title-row">
@@ -202,13 +192,13 @@ export default function WheelTipsSection({ selectedArea, onSelectArea }) {
           <div className="wheel-tips-video-player-wrap">
             <video
               key={videoSrc}
+              src={videoSrc}
               className="wheel-tips-video-player"
               controls
               playsInline
               preload="metadata"
               controlsList="nodownload"
             >
-              <source src={videoSrc} type="video/mp4" />
               Tu navegador no soporta reproducción de videos MP4.
             </video>
           </div>
