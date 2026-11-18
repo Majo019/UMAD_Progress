@@ -24,6 +24,7 @@ import { useTaskActivity } from '../../hooks/useTaskActivity';
 import LifeWheel from './LifeWheel';
 import WheelComparison from './WheelComparison';
 import WheelHistory from './WheelHistory';
+import WheelTipsSection from './WheelTipsSection';
 import './profile.css';
 
 function EditProfileModal({ open, onClose }) {
@@ -229,6 +230,9 @@ export default function ProfileView() {
       )}
 
       {user?.wheel_quiz_completed && <WheelHistory />}
+
+      {/* Tips y videos por área de la Rueda de la Vida */}
+      <WheelTipsSection selectedArea={selectedArea} onSelectArea={setSelectedArea} />
 
       {/* Menú */}
       <Card className="menu-card">

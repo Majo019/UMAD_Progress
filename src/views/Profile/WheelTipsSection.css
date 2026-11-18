@@ -1,0 +1,521 @@
+/* ==========================================================
+   WheelTipsSection · Tips por área de la Rueda de la Vida
+   Diseño acorde a tokens y temas (claro/oscuro) de UMAD Progress
+   ========================================================== */
+
+.wheel-tips-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-card);
+}
+
+/* Encabezado */
+.wheel-tips-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.wheel-tips-header__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.wheel-tips-header__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.wheel-tips-header__icon {
+  color: var(--color-coral);
+}
+
+.wheel-tips-header__badge {
+  font-size: var(--fs-xxs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--tint-coral);
+  color: var(--color-coral);
+  border: 1px solid rgba(255, 138, 122, 0.25);
+}
+
+.wheel-tips-header__desc {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Contenedor y barra de 8 pestañas */
+.wheel-tips-tabs-wrapper {
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--space-5));
+  padding: 0 var(--space-5) var(--space-2) var(--space-5);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.wheel-tips-tabs-wrapper::-webkit-scrollbar {
+  height: 4px;
+}
+
+.wheel-tips-tabs-wrapper::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.wheel-tips-tabs {
+  display: inline-flex;
+  gap: var(--space-2);
+  min-width: max-content;
+  padding: 4px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.wheel-tips-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.wheel-tips-tab:hover {
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.wheel-tips-tab.is-active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border-strong);
+}
+
+.wheel-tips-tab__icon {
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.wheel-tips-tab.is-active .wheel-tips-tab__icon {
+  color: var(--color-coral);
+  transform: scale(1.1);
+}
+
+/* Panel de contenido */
+.wheel-tips-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: fade-in var(--duration-base) var(--ease-out);
+}
+
+/* Hero / Cabecera del área activa */
+.wheel-tips-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.wheel-tips-hero__icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.wheel-tips-hero__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.wheel-tips-hero__top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.wheel-tips-hero__title {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.wheel-tips-hero__score {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+}
+
+.wheel-tips-hero__score strong {
+  color: var(--color-coral);
+}
+
+.wheel-tips-hero__subtitle {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0 0;
+}
+
+/* Toast de confirmación de tarea */
+.wheel-tips-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--tint-green);
+  border: 1px solid rgba(62, 207, 110, 0.3);
+  color: var(--color-green);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  animation: slide-down 0.25s var(--ease-out);
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Video Block */
+.wheel-tips-video-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+}
+
+.wheel-tips-video-block__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 var(--space-1);
+}
+
+.wheel-tips-video-block__head svg {
+  color: var(--color-coral);
+}
+
+.wheel-tips-video-player-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.wheel-tips-video-player {
+  width: 100%;
+  max-height: 380px;
+  display: block;
+  object-fit: contain;
+  background: #050507;
+}
+
+/* Grupos de secciones (Tips, Tareas, Referencias) */
+.wheel-tips-section-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.wheel-tips-section-group__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.wheel-tips-section-group__head h4 {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.wheel-tips-section-group__head-sub {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  margin: 2px 0 0 0;
+}
+
+.wheel-tips-icon--amber {
+  color: var(--color-amber);
+}
+
+.wheel-tips-icon--green {
+  color: var(--color-green);
+}
+
+.wheel-tips-icon--blue {
+  color: var(--color-blue);
+}
+
+/* Lista de tips */
+.wheel-tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.wheel-tips-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast);
+}
+
+.wheel-tips-item:hover {
+  border-color: var(--color-border-strong);
+}
+
+.wheel-tips-item__bullet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--tint-amber);
+  color: var(--color-amber);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xxs);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.wheel-tips-item__text {
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Grid de tareas sugeridas */
+.wheel-tips-tasks-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+.wheel-tips-task-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.wheel-tips-task-card.is-added {
+  border-color: rgba(62, 207, 110, 0.4);
+  background: rgba(62, 207, 110, 0.05);
+}
+
+.wheel-tips-task-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wheel-tips-task-card__title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.wheel-tips-task-card__detail {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.wheel-tips-task-card__badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 2px;
+}
+
+.task-diff-pill {
+  font-size: var(--fs-xxs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.task-diff-pill--green {
+  background: var(--tint-green);
+  color: var(--color-green);
+  border: 1px solid rgba(62, 207, 110, 0.25);
+}
+
+.task-diff-pill--amber {
+  background: var(--tint-amber);
+  color: var(--color-amber);
+  border: 1px solid rgba(245, 165, 36, 0.25);
+}
+
+.task-diff-pill--coral {
+  background: var(--tint-coral);
+  color: var(--color-coral);
+  border: 1px solid rgba(255, 90, 78, 0.25);
+}
+
+.wheel-tips-task-card__actions {
+  flex-shrink: 0;
+}
+
+.wheel-tips-task-card__added-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--tint-green);
+  color: var(--color-green);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+/* Lista de referencias con enlace */
+.wheel-tips-refs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.wheel-tips-ref-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-blue);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.4;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.wheel-tips-ref-link:hover {
+  background: var(--tint-blue);
+  border-color: rgba(143, 180, 255, 0.4);
+  color: var(--color-text);
+  transform: translateX(2px);
+}
+
+.wheel-tips-ref-link__text {
+  flex: 1;
+}
+
+.wheel-tips-ref-link__icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.wheel-tips-ref-link:hover .wheel-tips-ref-link__icon {
+  opacity: 1;
+}
+
+/* Nota de rigor académico al pie */
+.wheel-tips-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.wheel-tips-note__icon {
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.wheel-tips-note__text {
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin: 0;
+}

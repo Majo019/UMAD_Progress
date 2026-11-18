@@ -1,0 +1,423 @@
+/**
+ * Datos de los Tips por área de la Rueda de la Vida (para jóvenes universitarios).
+ * Requisito: contenido estructurado como datos independientes de los componentes
+ * para facilitar su edición y mantenimiento futuro.
+ */
+
+export const WHEEL_SOURCES_NOTE =
+  'Las fuentes de OMS, Harvard y Condusef son las más sólidas (guías oficiales e investigaciones de largo plazo). Las de Retrospección y Ocio son de carácter orientativo (blogs de divulgación y estudios correlacionales). Para fines académicos, se recomienda consultar las publicaciones primarias.';
+
+export const WHEEL_TIPS_DATA = [
+  {
+    key: 'alimentacion',
+    label: 'Alimentación',
+    subtitle: 'Nutrición, hidratación y energía para el día a día',
+    iconName: 'Apple',
+    colorKey: 'green',
+    accentColor: '#3ecf6e',
+    videoFile: 'video_alimentacion.mp4',
+    videoTitle: 'Video guía: Hábitos de alimentación saludable',
+    tips: [
+      'Arma tu plato con colores (verdura, fruta, cereal, proteína): obtienes más nutrientes sin contar calorías.',
+      'La OMS recomienda menos de 5 g de sal al día y menos del 10% de las calorías en azúcares libres. Los refrescos y bebidas energéticas de época de exámenes se llevan esa cuota de un solo trago.',
+      'No necesitas una dieta estricta: la alimentación saludable se adapta a tu estilo de vida y a tu nivel de actividad.',
+    ],
+    suggestedTasks: [
+      {
+        id: 'alim-task-1',
+        title: 'Cambiar el refresco por agua en 4 comidas de la semana',
+        difficulty: 'tranquila',
+        detail: 'Reducir azúcares libres y mantener hidratación',
+      },
+      {
+        id: 'alim-task-2',
+        title: 'Llevar fruta o una botana natural (cacahuates, zanahoria) para las horas libres entre clases',
+        difficulty: 'tranquila',
+        detail: 'Snack nutritivo para evitar comida chatarra',
+      },
+      {
+        id: 'alim-task-3',
+        title: 'Preparar el domingo 2 comidas para la semana (30 min)',
+        difficulty: 'media',
+        detail: 'Meal prep básico para días de alta carga académica',
+      },
+    ],
+    references: [
+      {
+        text: 'Qué incluye una dieta sana, según la OMS (ABC)',
+        url: 'https://www.abc.com.py/ciencia/2024/10/29/que-incluye-una-dieta-sana-segun-la-oms/',
+      },
+      {
+        text: 'La alimentación sana, OMS (UNEX)',
+        url: 'https://www.unex.es/organizacion/servicios-universitarios/servicios/servicio_prevencion/noticias/archivos/ficheros/Noticias/La%20alimentacion%20sana.pdf',
+      },
+      {
+        text: '5 recomendaciones para una alimentación saludable (National Geographic)',
+        url: 'https://www.nationalgeographicla.com/ciencia/2022/11/5-recomendaciones-para-una-alimentacion-saludable',
+      },
+      {
+        text: 'Guía OMS: proteínas, grasas y carbohidratos (N+)',
+        url: 'https://www.nmas.com.mx/salud/cuanta-proteina-y-grasa-debo-consumir-al-dia-oms-define-como-llevar-dieta-sana/',
+      },
+    ],
+  },
+  {
+    key: 'amigos',
+    label: 'Amigos',
+    subtitle: 'Vínculos cercanos, redes de apoyo y vida social',
+    iconName: 'Users',
+    colorKey: 'blue',
+    accentColor: '#8fb4ff',
+    videoFile: 'video_amigos.mp4',
+    videoTitle: 'Video guía: El valor de las amistades y conexiones reales',
+    tips: [
+      'Un estudio de Harvard con más de 80 años de seguimiento concluye que los vínculos cercanos son clave para el bienestar y amortiguan el estrés. En época de exámenes, eso es muy útil.',
+      'Quienes lo lograron no esperaron a que pasara: hicieron planes y se unieron a grupos.',
+      'Las amistades también se "entrenan": si no las cuidas, se debilitan.',
+      'Interactuar de verdad en redes (comentar, contestar, proponer plan) ayuda más que solo hacer scroll.',
+    ],
+    suggestedTasks: [
+      {
+        id: 'amig-task-1',
+        title: 'Mandar un mensaje a un amigo con quien ya no hablas, esta semana',
+        difficulty: 'tranquila',
+        detail: 'Retomar contacto y mantener el vínculo activo',
+      },
+      {
+        id: 'amig-task-2',
+        title: 'Proponer 1 plan en persona al mes: comida, cine, partido o estudiar juntos',
+        difficulty: 'media',
+        detail: 'Convivencia presencial para desconectar de la rutina',
+      },
+      {
+        id: 'amig-task-3',
+        title: 'Unirte a un club, equipo o grupo de la universidad',
+        difficulty: 'media',
+        detail: 'Ampliar círculo social en actividades compartidas',
+      },
+    ],
+    references: [
+      {
+        text: 'Harvard: claves para vivir más y ser más feliz (Forbes Argentina)',
+        url: 'https://www.forbesargentina.com/lifestyle/una-investigacion-harvard-revela-claves-vivir-mas-tiempo-ser-mas-feliz-n39063/amp',
+      },
+      {
+        text: 'Estudio de Harvard de 85 años (Ámbito)',
+        url: 'https://www.ambito.com/lifestyle/el-estudio-harvard-85-anos-revelo-el-secreto-la-felicidad-no-es-el-dinero-ni-el-exito-n6249372/amp',
+      },
+      {
+        text: 'La clave de la felicidad según Harvard (El Diario EC)',
+        url: 'https://www.eldiario.ec/lamarea/la-clave-de-la-felicidad-esta-en-algo-que-haces-a-diario-y-no-tiene-que-ver-con-dinero-o-fama-20250830/',
+      },
+    ],
+  },
+  {
+    key: 'trabajo',
+    label: 'Trabajo',
+    subtitle: '(estudio, proyectos, chamba)',
+    iconName: 'Briefcase',
+    colorKey: 'amber',
+    accentColor: '#f5a524',
+    videoFile: 'video_trabajo.mp4',
+    videoTitle: 'Video guía: Gestión de entregas y salud mental en el trabajo',
+    tips: [
+      'La OMS identifica como riesgos la carga excesiva, los horarios muy largos y la falta de apoyo. Si te suena a semana de entregas, no eres el único.',
+      'Caminar o hacer ejercicio ayuda a la salud mental y al rendimiento. También el yoga o el mindfulness para bajar el estrés.',
+      'Pide ayuda temprano: un bloqueo de 10 minutos con tu equipo ahorra horas.',
+    ],
+    suggestedTasks: [
+      {
+        id: 'trab-task-1',
+        title: 'Dividir cada entrega en subtareas con fecha propia',
+        difficulty: 'media',
+        detail: 'Fraccionar proyectos para evitar saturación de último momento',
+      },
+      {
+        id: 'trab-task-2',
+        title: 'Estudiar en bloques con descansos y dejar una hora fija al día sin pendientes',
+        difficulty: 'media',
+        detail: 'Técnica de bloques con desconexión asegurada',
+      },
+      {
+        id: 'trab-task-3',
+        title: 'Pedir retroalimentación a tu equipo o profesor antes de la fecha final, no después',
+        difficulty: 'tranquila',
+        detail: 'Detección temprana de correcciones en entregables',
+      },
+    ],
+    references: [
+      {
+        text: 'Estrés laboral: recomendaciones de la OMS (Canal 26)',
+        url: 'https://www.canal26.com/bienestar-y-salud/estres-laboral-las-recomendaciones-de-la-oms-para-proteger-la-salud-mental-en-el-trabajo--359458',
+      },
+      {
+        text: 'OMS y OIT: salud mental en el trabajo (Forbes México)',
+        url: 'https://forbes.com.mx/?p=1030893',
+      },
+      {
+        text: 'La OMS aconseja yoga y meditación en el trabajo (Swissinfo/EFE)',
+        url: 'https://www.swissinfo.ch/spa/la-oms-aconseja-yoga-y-meditaci%C3%B3n-para-mejorar-la-salud-mental-en-el-trabajo/47935810',
+      },
+    ],
+  },
+  {
+    key: 'familia',
+    label: 'Familia',
+    subtitle: 'Comunicación, tiempo de calidad y respaldo mutuo',
+    iconName: 'Home',
+    colorKey: 'coral',
+    accentColor: '#ff8a7a',
+    videoFile: 'video_familia.mp4',
+    videoTitle: 'Video guía: Vínculos familiares y tiempo de calidad',
+    tips: [
+      'La comunicación abierta y honesta es la base de una relación cercana. Un ritual simple, como una cena donde todos cuentan su día, ayuda mucho.',
+      'El tiempo de calidad no tiene que ser algo extraordinario, y reduce conflictos.',
+      'Un estudio encontró que comunicación, contacto frecuente y apoyo mutuo predicen la satisfacción familiar más que el ingreso o la educación.',
+    ],
+    suggestedTasks: [
+      {
+        id: 'fam-task-1',
+        title: 'Llamar o mandar una nota de voz a tu familia 1 vez por semana',
+        difficulty: 'tranquila',
+        detail: 'Mantener comunicación regular con la familia',
+      },
+      {
+        id: 'fam-task-2',
+        title: 'Hacer una comida o cena con la familia, con el celular guardado',
+        difficulty: 'media',
+        detail: 'Espacio de convivencia sin distracciones digitales',
+      },
+      {
+        id: 'fam-task-3',
+        title: 'Preguntarle a alguien de tu familia cómo está y escuchar sin interrumpir',
+        difficulty: 'tranquila',
+        detail: 'Escucha activa y presencia consciente',
+      },
+    ],
+    references: [
+      {
+        text: '9 maneras de fomentar relaciones familiares saludables (Marriage.com)',
+        url: 'https://www.marriage.com/es/advice/relationship/family-relationship/',
+      },
+      {
+        text: 'Tiempo de calidad, la "vitamina T" (Prensa Libre)',
+        url: 'https://www.prensalibre.com/?p=23755343',
+      },
+      {
+        text: 'Satisfacción familiar y bienestar subjetivo (Dialnet)',
+        url: 'https://dialnet.unirioja.es/descarga/articulo/9157683.pdf',
+      },
+    ],
+  },
+  {
+    key: 'deporte',
+    label: 'Deporte',
+    subtitle: 'Actividad física, energía y acondicionamiento progresivo',
+    iconName: 'Activity',
+    colorKey: 'green',
+    accentColor: '#3ecf6e',
+    videoFile: 'video_deporte.mp4',
+    videoTitle: 'Video guía: Actividad física sostenible y sin complicaciones',
+    tips: [
+      'La OMS recomienda de 150 a 300 minutos semanales de actividad aeróbica moderada a vigorosa: unos 30 min al día, 5 días.',
+      'Cuenta caminar, andar en bici o jugar. No necesitas gimnasio.',
+      'Suma ejercicios de fuerza muscular 2 o más días por semana.',
+      'Empieza poco a poco: primero duración y frecuencia, y después intensidad.',
+    ],
+    suggestedTasks: [
+      {
+        id: 'dep-task-1',
+        title: 'Semanas 1-2: caminar 20 min, 3 días (por ejemplo, de camino a la escuela)',
+        difficulty: 'tranquila',
+        detail: 'Construir el hábito básico de movimiento cotidiano',
+      },
+      {
+        id: 'dep-task-2',
+        title: 'Semanas 3-4: 30 min, 4 días, más 2 sesiones cortas de fuerza',
+        difficulty: 'media',
+        detail: 'Progresión en tiempo e incorporación de fuerza muscular',
+      },
+      {
+        id: 'dep-task-3',
+        title: 'Invitar a un amigo: así combinas Deporte con Amigos',
+        difficulty: 'tranquila',
+        detail: 'Hacer ejercicio en compañía para mayor adherencia',
+      },
+    ],
+    references: [
+      {
+        text: 'Recomendaciones mundiales sobre actividad física, OMS 2010',
+        url: 'https://www.munideporte.com/imagenes/documentacion/ficheros/20101201142649recomendaciones_oms.pdf',
+      },
+      {
+        text: 'Nuevas recomendaciones de actividad física (OPS)',
+        url: 'https://www.paho.org/es/noticias/4-12-2020-elige-vivir-sano-opsoms-chile-presentaron-nuevas-recomendaciones-sobre-actividad',
+      },
+      {
+        text: 'OMS aconseja entre 150 y 300 minutos semanales (UnoTV)',
+        url: 'https://www.unotv.com/ciencia-y-tecnologia/oms-aconseja-ahora-entre-150-y-300-minutos-semanales-de-ejercicio-fisico/',
+      },
+      {
+        text: 'Sedentarismo y recomendaciones OMS (Consumer)',
+        url: 'https://www.consumer.es/salud/la-oms-situa-el-sedentarismo-como-el-cuarto-factor-de-riesgo-de-mortalidad-global.html',
+      },
+    ],
+  },
+  {
+    key: 'economia',
+    label: 'Economía',
+    subtitle: 'Presupuesto estudiantil, ahorro y prevención financiera',
+    iconName: 'Wallet',
+    colorKey: 'amber',
+    accentColor: '#f5a524',
+    videoFile: 'video_economia.mp4',
+    videoTitle: 'Video guía: Finanzas sanas para estudiantes universitarios',
+    tips: [
+      'Regla 50-30-20: 50% necesidades, 30% gustos, 20% ahorro. Si tu ingreso es una beca o mesada, aplícala al total.',
+      'La Condusef recomienda apartar al menos el 10% de tus ingresos para un fondo de emergencia, e insiste en que ahorrar "lo que sobra" casi nunca funciona.',
+      'Antes de compararte con la regla, registra tus gastos al menos dos meses.',
+    ],
+    suggestedTasks: [
+      {
+        id: 'eco-task-1',
+        title: 'Anotar todos tus gastos durante 30 días (app o Excel)',
+        difficulty: 'media',
+        detail: 'Monitorear entradas y salidas para tener claridad financiera',
+      },
+      {
+        id: 'eco-task-2',
+        title: 'Programar una transferencia automática a ahorro el día que te llegue el dinero',
+        difficulty: 'tranquila',
+        detail: 'Ahorrar primero antes de iniciar los gastos variables',
+      },
+      {
+        id: 'eco-task-3',
+        title: 'Cancelar una suscripción que no uses',
+        difficulty: 'tranquila',
+        detail: 'Eliminar gastos hormiga y servicios inactivos',
+      },
+    ],
+    references: [
+      {
+        text: 'Regla 50-30-20 (El Imparcial)',
+        url: 'https://www.elimparcial.com/dinero/2026/02/23/la-regla-50-30-20-para-organizar-tu-dinero-y-empezar-a-ahorrar-sin-complicaciones/',
+      },
+      {
+        text: 'Fondo de emergencia según Condusef (Fox Sports MX)',
+        url: 'https://www.foxsports.com.mx/2026/09/06/condusef-cuanto-dinero-debes-tener-en-tu-fondo-de-emergencia-para-sobrevivir-seis-meses-sin-trabajo-uti/',
+      },
+      {
+        text: 'Condusef: ahorrar lo que sobra casi nunca funciona (El Imparcial)',
+        url: 'https://www.elimparcial.com/dinero/2026/05/12/condusef-explica-por-que-ahorrar-lo-que-sobra-casi-nunca-funciona-y-recomienda-separar-primero-una-parte-del-sueldo-para-evitar-deudas-y-enfrentar-emergencias/',
+      },
+      {
+        text: 'Presupuesto 50/30/20 (CU of America)',
+        url: 'https://www.cuofamerica.com/Documents/It-s-a-Money-Thing/Saving/ES40_B_Infographic_CUAmerica-(1).pdf',
+      },
+    ],
+  },
+  {
+    key: 'retrospeccion',
+    label: 'Retrospección',
+    subtitle: 'Reflexión, autoconocimiento y hábitos de journaling',
+    iconName: 'Brain',
+    colorKey: 'blue',
+    accentColor: '#3d86ff',
+    videoFile: 'video_retrospeccion.mp4',
+    videoTitle: 'Video guía: El poder de mirarse hacia dentro y reflexionar',
+    tips: [
+      'Escribir de 2 a 4 minutos ya ayuda a bajar la ansiedad, y la constancia vale más que la intensidad. (Fuente orientativa: blog de una app de journaling.)',
+      'Preguntas como "¿qué me da vida?" y "¿dónde se me va la energía?" dan dirección a lo que escribes.',
+      'Si te saltas un día, no pasa nada: regresa.',
+    ],
+    suggestedTasks: [
+      {
+        id: 'ret-task-1',
+        title: 'Escribir 5 min cada noche: "¿qué salió bien hoy y qué aprendí?"',
+        difficulty: 'tranquila',
+        detail: 'Ejercicio breve de journaling y gratitud antes de dormir',
+      },
+      {
+        id: 'ret-task-2',
+        title: 'Hacer una revisión de 20 min cada domingo con tus 8 áreas',
+        difficulty: 'media',
+        detail: 'Evaluación rápida de balance personal al cierre de semana',
+      },
+      {
+        id: 'ret-task-3',
+        title: 'Rehacer la rueda cada mes y anotar qué cambió',
+        difficulty: 'tranquila',
+        detail: 'Comparar rueda inicial vs final para medir tu progreso',
+      },
+    ],
+    references: [
+      {
+        text: 'Journaling de 5 minutos (MyLifeNote)',
+        url: 'https://blog.mylifenote.ai/es/diario-de-cinco-minutos.md',
+      },
+      {
+        text: 'Bondades del journaling (Revista Mercado)',
+        url: 'https://revistamercado.do/medihealth/journaling/',
+      },
+      {
+        text: 'Guía de revisión personal (El Método Slow)',
+        url: 'https://elmetodoslow.substack.com/p/el-arte-de-mirarse-por-dentro-una',
+      },
+    ],
+  },
+  {
+    key: 'ocio',
+    label: 'Ocio',
+    subtitle: 'Pasatiempos, recreación y descanso libre de culpas',
+    iconName: 'Gamepad2',
+    colorKey: 'coral',
+    accentColor: '#ff5a4e',
+    videoFile: 'video_ocio.mp4',
+    videoTitle: 'Video guía: El descanso inteligente y el valor del tiempo libre',
+    tips: [
+      'Las actividades de ocio que eliges libremente y disfrutas benefician tu salud física y tu bienestar emocional.',
+      'Los estudios sobre aficiones muestran relación, no causa, y la muestra citada era de adultos mayores. Úsalo como motivación, no como regla. (Fuente orientativa.)',
+      'Descansar también es parte de rendir: no es tiempo perdido.',
+    ],
+    suggestedTasks: [
+      {
+        id: 'oci-task-1',
+        title: 'Reservar 2 horas por semana solo para un hobby, bloqueadas en tu calendario',
+        difficulty: 'tranquila',
+        detail: 'Tiempo intencional de pasatiempo sin compromisos académicos',
+      },
+      {
+        id: 'oci-task-2',
+        title: 'Probar una actividad nueva al mes: taller, deporte, instrumento o videojuego en grupo',
+        difficulty: 'media',
+        detail: 'Estimular la creatividad explorando nuevos intereses',
+      },
+      {
+        id: 'oci-task-3',
+        title: 'Tener un día cada 2 semanas sin tareas ni pendientes',
+        difficulty: 'dificil',
+        detail: 'Desconexión profunda y recarga integral de energía',
+      },
+    ],
+    references: [
+      {
+        text: 'Tener aficiones y su relación con la salud mental (Infocop)',
+        url: 'https://www.infocop.es/tener-aficiones-y-su-relacion-con-la-salud-mental/',
+      },
+      {
+        text: 'Tiempo de ocio de calidad y salud (Psiquiatría.com)',
+        url: 'https://psiquiatria.com/salud-mental/el-tiempo-de-ocio-de-calidad-impacta-positivamente-sobre-nuestra-salud-fisica-y-mental',
+      },
+      {
+        text: 'Cuánto tiempo libre se necesita para ser feliz (Noticias Caracol)',
+        url: 'https://www.noticiascaracol.com/estilo-de-vida/cuanto-tiempo-libre-se-necesita-para-ser-feliz-so35',
+      },
+    ],
+  },
+];
+
+/** Mapa rápido por clave para accesos directos */
+export const WHEEL_TIPS_BY_KEY = WHEEL_TIPS_DATA.reduce((acc, item) => {
+  acc[item.key] = item;
+  return acc;
+}, {});
